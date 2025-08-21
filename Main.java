@@ -11,8 +11,12 @@ public class Main {
 
         WindowManager.createWindow(simulation);
 
-        timer = new Timer(50, simulation);
-        timer.start();
+        // timer = new Timer(50, simulation);
+        // timer.start();
+
+        
+        
+    
 
     }
     
