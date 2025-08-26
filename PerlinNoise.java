@@ -1,4 +1,4 @@
-
+import java.util.Random;
 
 public class PerlinNoise {
 
@@ -25,6 +25,13 @@ public class PerlinNoise {
             p[x] = permutation[x%256];
         }
     }
+
+    public PerlinNoise(Random random){
+        p = new int[512];
+        for(int x = 0; x < 512; x++) {
+            p[x] = permutation[(x + random.nextInt(x+1)) % 256];
+        }
+    }
     
     public double perlin(double x, double y){
         int xi = (int) x & 255; // same as x mod 255. Will be applied later to generate gradient vectors
@@ -39,10 +46,10 @@ public class PerlinNoise {
         
 
         int left_bottom, left_top, right_bottom, right_top;
-        left_bottom = p[p[    xi ]+     yi ]; // This is the hash function that Perlin Noise uses. Mathematically cheap addition and look-ups.
-        left_top = p[p[    xi ]+ 1 + yi ];
+        left_bottom =  p[p[    xi ]+     yi ]; // This is the hash function that Perlin Noise uses. Mathematically cheap addition and look-ups.
+        left_top =     p[p[    xi ]+ 1 + yi ];
         right_bottom = p[p[1 + xi ]+     yi ];
-        right_top = p[p[1 + xi ]+ 1 + yi ];
+        right_top =    p[p[1 + xi ]+ 1 + yi ];
   
         double x1, x2, y1;
         x1 = lerp(grad (left_bottom, xf, yf),         // The gradient function calculates the dot product between a pseudorandom
@@ -82,5 +89,23 @@ public class PerlinNoise {
     public static double lerp(double a, double b, double x) {
         return a + x * (b - a);
     }
+
+
+    public double OctavePerlin(double x, double y, int octaves, double persistence) {
+    double total = 0;
+    double frequency = 1;
+    double amplitude = 1;
+    double maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
+    for(int i=0;i<octaves;i++) {
+        total += perlin(x * frequency, y * frequency) * amplitude;
+        
+        maxValue += amplitude;
+        
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+    
+    return total/maxValue;
+}
 
 }
