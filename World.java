@@ -10,31 +10,56 @@ public class World {
     private static int BEACH = 2;
     private static int GRASS = 3;
     private static int BUSH =  4;
-    private static Color[] COLOURS =   {new Color(82,70,186), new Color(70,148,186), new Color(181,186,102), new Color(75,188,67), new Color(28,131,21)};
-    private static int[] ALL_TERRAIN = {      LAKE1,        LAKE2,         BEACH,       GRASS,        BUSH};
-    private static double[] weights =  {          1,            1,           0.5,           1,           1};
+    
+    private static Color[] COLOURS_TERRAIN =   {new Color(54,100,190), new Color(59,132,147), new Color(192,178,97), new Color(127,170,73), new Color(70,131,30)   };
+    private static int[] ALL_TERRAIN = {                              LAKE1,                       LAKE2,                        BEACH,                      GRASS,                       BUSH   };
+    private static double[] weights_terrain =  {                          1,                           1,                          0.3,                          2,                          1   };
     private static double[] heights = new double[ALL_TERRAIN.length];
-    private static int[][] map;
+    private static int[][] map_terrain;
+    private static Color[][] map_terrain_colours;
+
+    private static int NOT_FOOD = 0;
+    private static int FOOD = 1;
+    private static Color FOOD_COLOUR =                      new Color(92,59, 156);
+    private static int[] ALL_FOOD =        {    NOT_FOOD,                         FOOD};
+    private static double[] weights_food = {           5,                            1};
+    private static int[][] map_food;
+
+    // public static int WORLD_SIZE = 700;
+    // public static int TILE_SIZE = 16;
     
 
 
-    public static int SIZE = 170;
-    public static int CELL_SIZE = 4;
-    private static int BUSH_SIZE = 5;
-    public static Color BUSH_COLOR = new Color(0,100,0);
+    public static int SIZE = 140;
+    public static int CELL_SIZE = 5;
+    public static int WORLD_SIZE = SIZE * CELL_SIZE;
+    // private static int BUSH_SIZE = 5;
+    // public static Color BUSH_COLOR = new Color(0,100,0);
     public static Color BACKGROUND_COLOR = new Color(0, 163, 108);
 
 
 
     private Cell[][] grid;
     private double[][] noise_grid = new double[SIZE * CELL_SIZE][SIZE * CELL_SIZE];
+    private double[][] noise_food = new double[SIZE * CELL_SIZE][SIZE * CELL_SIZE];
 
-    private double FREQUENCY = 0.007;
+    private double FREQUENCY = 0.03;
     private PerlinNoise noise;
-    private static double min_value = 0;
-    private static double max_value = 0;
+
 
     private static Random random;
+
+
+
+
+
+
+
+
+
+
+
+
 
     public World(){
         random = new Random();
@@ -49,66 +74,79 @@ public class World {
         // }
 
 
-        for (int x = 0; x < SIZE * CELL_SIZE; x++){
-            for (int y = 0; y < SIZE * CELL_SIZE; y++){
+        for (int x = 0; x < SIZE; x++){
+            for (int y = 0; y < SIZE; y++){
                 double sampleX = x * FREQUENCY;
                 double sampleY = y * FREQUENCY;
 
                 
+                /*
+                 * This will generate the main features of a terrain.
+                 */
                 
                 double layer1 = noise.OctavePerlin(sampleX, sampleY, 1, 2) / 2;
                 double layer2 = noise.OctavePerlin(sampleX, sampleY, 2, 1) / 4;
                 double layer3 = noise.OctavePerlin(sampleX, sampleY, 4, 0.5) / 6;
                 double layer4 = noise.OctavePerlin(sampleX, sampleY, 6, 0.5) / 8;
-                double layer5 = noise.OctavePerlin(sampleX, sampleY, 24, 0.5) / 10;
+                double layer5 = noise.OctavePerlin(sampleX, sampleY, 24, 0.8) / 10; // a slight increase in the persistence of this layer will result in the more fractal nature
 
-                this.noise_grid[x][y] = easingSinFunc(layer1 + layer2 + layer3 + layer4 + layer5);
+                this.noise_grid[x][y] = HelpFunctions.easingSinFunc(layer1 + layer2 + layer3 + layer4 + layer5); // adding different rescaled noise layers generates Fractal Perlin Noise.
                 
+                /* 
+                 * Here, I will generate the second noise grid that will determine the diustribuition of berries on the bushes.
+                 */
             
+                double food_layer = noise.OctavePerlin(sampleX, sampleY, 9, 1);
+                this.noise_food[x][y] = HelpFunctions.easingSinFunc(food_layer);
+
             }
         }
-        map = convertToTerrain(noise_grid, weights);
+        map_terrain = convertToTerrain(noise_grid, weights_terrain, ALL_TERRAIN);
+        map_terrain_colours = convertToColour(map_terrain, COLOURS_TERRAIN);
+        map_terrain_colours = HelpFunctions.convolution(map_terrain_colours);
+        map_food = convertToTerrain(noise_food, weights_food, ALL_FOOD);
+        
+        
         
     }
 
 
-    public double easingSinFunc(double x){
-        return 0.5 * (Math.sin( 3 * (x - Math.PI / 6) ) + 1);
-    }
+    private Color[][] convertToColour(int[][] grid, Color[] colors){
+        Color[][] updated_map = new Color[grid.length][grid[0].length];
 
-
-
-    private void findMinMax(double[][] world){
-        for (int i = 0; i < SIZE  * CELL_SIZE; i++){
-            for (int j = 0; j < SIZE * CELL_SIZE; j++){
-                if (world[i][j] > max_value){
-                    max_value = world[i][j];
-                } else if (world[i][j] < min_value){
-                    min_value = world[i][j];
-                }
-
+        for (int i = 0; i < grid.length; i++){
+            for (int j = 0; j < grid[0].length; j++){
+                updated_map[i][j] = colors[grid[i][j]];
             }
         }
+
+        return updated_map;
     }
 
 
-    private int[][] convertToTerrain(double[][] grid, double[] weights){
-        int total_weights = sum(weights);
-        findMinMax(grid);
+
+  
+
+
+    private int[][] convertToTerrain(double[][] grid, double[] weights, int[] ALL_VARIATIONS){
+        int total_weights = HelpFunctions.sum(weights);
+        double[] MinMax = HelpFunctions.findMinMax(grid);
+        double max_value = MinMax[1], min_value = MinMax[0];
+
         double range = max_value - min_value;
         double previous_height = min_value;
-        for (int terrain : ALL_TERRAIN){
-            double height = range * (weights[terrain] / total_weights) + previous_height;
-            heights[terrain] = height;
+        for (int type : ALL_VARIATIONS){
+            double height = range * (weights[type] / total_weights) + previous_height;
+            heights[type] = height;
             previous_height = height;
         }
 
         int[][] map = new int[grid.length][grid[0].length];
         for (int x = 0; x < grid.length; x++){
             for (int y = 0; y < grid[0].length; y++){
-                for (int terrain : ALL_TERRAIN){
-                    if (grid[x][y] <= heights[terrain]) {
-                        map[x][y] = terrain;
+                for (int type : ALL_VARIATIONS){
+                    if (grid[x][y] <= heights[type]) {
+                        map[x][y] = type;
                         break;
                     }
                 }
@@ -118,13 +156,7 @@ public class World {
     }
 
 
-    private static int sum(double[] values){
-        int sum = 0;
-        for (double value : values){
-            sum += value;
-        }
-        return sum;
-    }
+
 
 
 
@@ -157,18 +189,23 @@ public class World {
 
 
 
+    private static Color[] tile_corner_types = new Color[4];
 
     public void draw(Graphics g){
-        for (int i = 0; i < SIZE  * CELL_SIZE; i++){
-            for (int j = 0; j < SIZE * CELL_SIZE; j++){
-                
-                // int parameter = (int) (noise_grid[i][j] * 255);
+        for (int i = 0; i < SIZE; i++){
+            for (int j = 0; j < SIZE; j++){
 
-                g.setColor(COLOURS[map[i][j]]);
- 
+
+                int parameter = (int) (noise_food[i][j] * 255);
+
+                if (map_terrain[i][j] == BUSH && map_food[i][j] == FOOD){
+                    g.setColor(FOOD_COLOUR);
+                } else g.setColor(map_terrain_colours[i][j]);
+                // g.setColor(COLOURS_TERRAIN[map_terrain[i][j]]);
+                
             
                 // g.setColor(new Color(parameter, parameter, parameter));
-                g.fillRect(i, j, 1, 1);
+                g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
             }
         }

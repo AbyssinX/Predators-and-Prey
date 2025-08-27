@@ -42,7 +42,6 @@ public class PerlinNoise {
 
         double u = fade(xf);
         double v = fade(yf);
-
         
 
         int left_bottom, left_top, right_bottom, right_top;
@@ -52,24 +51,24 @@ public class PerlinNoise {
         right_top =    p[p[1 + xi ]+ 1 + yi ];
   
         double x1, x2, y1;
-        x1 = lerp(grad (left_bottom, xf, yf),         // The gradient function calculates the dot product between a pseudorandom
+        x1 = lerp(grad (left_bottom, xf, yf),                   // The gradient function calculates the dot product between a pseudorandom
                   grad (right_bottom, xf-1, yf), u);            // gradient vector and the vector from the input coordinate to the 4
-                                                      // surrounding points in its unit square.
-        x2 = lerp(grad (left_top, xf  , yf-1),              // This is all then lerped together as a sort of weighted average based on the faded (u,v)
-                  grad (right_top, xf-1, yf-1),  u);         // values.
+                                                                // surrounding points in its unit square.
+        x2 = lerp(grad (left_top, xf  , yf-1),                  // This is all then lerped together as a sort of weighted average based on the faded (u,v)
+                  grad (right_top, xf-1, yf-1),  u);            // values.
                   
         y1 = lerp (x1, x2, v);
 
-        return (y1+1) / 2;        // this way the final value is between [0,1]
+        return (y1 + 1) / 2;        // this way the final value is between [0,1]
     }
 
 
 
     public static double fade(double t) {
                                                         // Fade function as defined by Ken Perlin.  This eases coordinate values
-                                                        // so that they will ease towards integral values.  This ends up smoothing
+                                                        // so that they will lean towards integral values.  This ends up smoothing
                                                         // the final output.
-    return t * t * t * (t * (t * 6 - 15) + 10);         // 6t^5 - 15t^4 + 10t^3
+    return t * t * t * (t * (t * 6 - 15) + 10);         // 6t^5 - 15t^4 + 10t^3 - preserves the first order continuity and the second order continuity.
     }
 
 

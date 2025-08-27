@@ -14,9 +14,10 @@ public class Simulation extends JPanel implements ActionListener {
     private Random random;
 
     public Simulation(){
-        this.setPreferredSize(new Dimension(World.SIZE * World.CELL_SIZE, World.SIZE * World.CELL_SIZE));
         random = new Random();
         this.world = new World();
+
+        this.setPreferredSize(new Dimension(World.WORLD_SIZE, World.WORLD_SIZE));
     }
 
     @Override
