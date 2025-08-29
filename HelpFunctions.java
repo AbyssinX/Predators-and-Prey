@@ -54,6 +54,7 @@ public class HelpFunctions {
     }
 
     private static double[][] convolution_matrix = {{0.0113, 0.0838, 0.0113}, {0.0838, 0.6193, 0.0838}, {0.0113, 0.0838, 0.0113}};
+    // private static double[][] convolution_matrix = {{0,0,0}, {0,1,0}, {0,0,0}};
     // private static double[][] convolution_matrix = {{0.25, 0.25}, {0.25, 0.25}};
     
     public static Color[][] convolution(Color[][] map){

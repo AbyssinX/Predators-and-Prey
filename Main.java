@@ -1,5 +1,9 @@
 import javax.swing.Timer;
 
+/*
+ * I want to implement and see the difference between the perfomance of Reinforcement Learning and Lotka-Volterra equations.
+ */
+
 public class Main {
 
     private static Timer timer;
@@ -11,8 +15,8 @@ public class Main {
 
         WindowManager.createWindow(simulation);
 
-        // timer = new Timer(50, simulation);
-        // timer.start();
+        timer = new Timer(70, simulation);
+        timer.start();
 
         
         

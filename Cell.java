@@ -4,10 +4,21 @@ public class Cell {
 
     private Color color;
     private String tag;
+    protected int speed;
+    private int FOOD_BAR;
+    private int WATER_BAR;
 
     public Cell(Color color, String tag){
         this.color = color;
         this.tag = tag;
+
+        if (isPredator()){
+            this.FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE;
+            this.WATER_BAR = Prey.MAX_WATER_BAR_VALUE;
+        } else if (isPrey()){
+            this.FOOD_BAR = Prey.MAX_FOOD_BAR_VALUE;
+            this.FOOD_BAR = Prey.MAX_WATER_BAR_VALUE;
+        }
     }
 
     public Color getColor(){
@@ -27,7 +38,15 @@ public class Cell {
     }
 
     public int getSpeed(){
-        return 0;
+        return speed;
+    }
+
+    public void setFoodBar(int x){
+        this.FOOD_BAR = x;
+    }
+
+    public void setWaterBar(int x){
+        this.WATER_BAR = x;
     }
     
 }

@@ -5,6 +5,7 @@ import java.util.Random;
 
 public class World {
 
+    // Configuration for the terrain
     private static int LAKE1 = 0;
     private static int LAKE2 = 1;
     private static int BEACH = 2;
@@ -13,7 +14,9 @@ public class World {
     
     private static Color[] COLOURS_TERRAIN =   {new Color(54,100,190), new Color(59,132,147), new Color(192,178,97), new Color(127,170,73), new Color(70,131,30)   };
     private static int[] ALL_TERRAIN = {                              LAKE1,                       LAKE2,                        BEACH,                      GRASS,                       BUSH   };
-    private static double[] weights_terrain =  {                          1,                           1,                          0.3,                          2,                          1   };
+    private static double[] weights_terrain =  {                          11,                           11,                          3,                         16,                         12   };    // more bushes
+    // private static double[] weights_terrain2 =  {                         1,                           1,                          0.3,                          2,                        1.5   };  // grass is dominating, yet interesting rivers form
+    // private static double[] weights_terrain3 =  {                        0.8,                         0.8,                          0.3,                          1.8,                          1 }; // water world
     private static double[] heights = new double[ALL_TERRAIN.length];
     private static int[][] map_terrain;
     private static Color[][] map_terrain_colours;
@@ -25,29 +28,26 @@ public class World {
     private static double[] weights_food = {           5,                            1};
     private static int[][] map_food;
 
-    // public static int WORLD_SIZE = 700;
-    // public static int TILE_SIZE = 16;
-    
 
 
+    // Configuration for the size of the world.
     public static int SIZE = 140;
     public static int CELL_SIZE = 5;
     public static int WORLD_SIZE = SIZE * CELL_SIZE;
-    // private static int BUSH_SIZE = 5;
-    // public static Color BUSH_COLOR = new Color(0,100,0);
-    public static Color BACKGROUND_COLOR = new Color(0, 163, 108);
+    private static Color MARK_BACKGROUND = new Color(0, 0, 0); // I need this for the functionality of the cells.
+    private static Color PREY_COLOR = new Color(124,252,0);
+    private static Color PREDATOR_COLOR = new Color(183,53,79);
 
 
 
-    private Cell[][] grid;
-    private double[][] noise_grid = new double[SIZE * CELL_SIZE][SIZE * CELL_SIZE];
-    private double[][] noise_food = new double[SIZE * CELL_SIZE][SIZE * CELL_SIZE];
+    private Cell[][] animal_grid;
+    private final static int MAXIMUM_ANIMAL_COUNT = 100;            // allows me to control how many actors are spawned
+    private double[][] noise_grid = new double[SIZE][SIZE];
+    private double[][] noise_food = new double[SIZE][SIZE];
 
     private double FREQUENCY = 0.03;
     private PerlinNoise noise;
 
-
-    private static Random random;
 
 
 
@@ -62,17 +62,38 @@ public class World {
 
 
     public World(){
-        random = new Random();
+
+        this.animal_grid = new Cell[SIZE][SIZE];
+
+        for (int i = 0; i < SIZE; i++){
+            for (int j = 0; j < SIZE; j++){
+                this.animal_grid[i][j] = new Cell(MARK_BACKGROUND, "background");
+            }
+        }
+    
+    }
+
+
+
+
+    public World(Random random){
+
+        this.animal_grid = new Cell[SIZE][SIZE];
+        int animal_count = 0;
+
+        for (int i = 0; i < SIZE; i++){
+            for (int j = 0; j < SIZE; j++){
+                if (random.nextDouble() > 0.995 && animal_count < MAXIMUM_ANIMAL_COUNT){ 
+                    this.animal_grid[i][j] = random.nextBoolean() ? new Predator(PREDATOR_COLOR, 1) : new Prey(PREY_COLOR, 1);
+                    animal_count++;
+                } else {
+                    this.animal_grid[i][j] = new Cell(MARK_BACKGROUND, "background");
+                } 
+                    
+            }
+        }
+
         noise = new PerlinNoise(random);
-
-        // this.grid = new Cell[SIZE][SIZE];
-
-        // for (int i = 0; i < SIZE; i++){
-        //     for (int j = 0; j < SIZE; j++){
-        //         this.grid[i][j] = new Cell(BACKGROUND_COLOR, "background");
-        //     }
-        // }
-
 
         for (int x = 0; x < SIZE; x++){
             for (int y = 0; y < SIZE; y++){
@@ -90,14 +111,14 @@ public class World {
                 double layer4 = noise.OctavePerlin(sampleX, sampleY, 6, 0.5) / 8;
                 double layer5 = noise.OctavePerlin(sampleX, sampleY, 24, 0.8) / 10; // a slight increase in the persistence of this layer will result in the more fractal nature
 
-                this.noise_grid[x][y] = HelpFunctions.easingSinFunc(layer1 + layer2 + layer3 + layer4 + layer5); // adding different rescaled noise layers generates Fractal Perlin Noise.
+                this.noise_grid[x][y] = layer1 + layer2 + layer3 + layer4 + layer5; // adding different rescaled noise layers generates Fractal Perlin Noise.
                 
                 /* 
                  * Here, I will generate the second noise grid that will determine the diustribuition of berries on the bushes.
                  */
             
                 double food_layer = noise.OctavePerlin(sampleX, sampleY, 9, 1);
-                this.noise_food[x][y] = HelpFunctions.easingSinFunc(food_layer);
+                this.noise_food[x][y] = food_layer;
 
             }
         }
@@ -105,10 +126,13 @@ public class World {
         map_terrain_colours = convertToColour(map_terrain, COLOURS_TERRAIN);
         map_terrain_colours = HelpFunctions.convolution(map_terrain_colours);
         map_food = convertToTerrain(noise_food, weights_food, ALL_FOOD);
-        
-        
-        
+    
+    
+           
     }
+
+
+
 
 
     private Color[][] convertToColour(int[][] grid, Color[] colors){
@@ -157,77 +181,44 @@ public class World {
 
 
 
-
-
-
-
-    public World(Random random){
-        this.grid = new Cell[SIZE][SIZE];
-        for (int i = 0; i < SIZE; i++){
-            for (int j = 0; j < SIZE; j++){
-                if (random.nextDouble() > 0.995){
-                    this.grid[i][j] = random.nextBoolean() ? new Predator(Color.RED, 2) : new Prey(Color.GREEN, 1);
-                } else {
-                    this.grid[i][j] = new Cell(BACKGROUND_COLOR, "background");
-                } 
-                    
-            }
-        }
-           
-    }
-
     
 
+
+
+
     
-    public Cell[][] getGrid(){
-        return this.grid;
+    public Cell[][] getAnimalGrid(){
+        return this.animal_grid;
     }
+
 
     public void set(int x, int y, Cell cell){
-        this.grid[x][y] = cell;
+        this.animal_grid[x][y] = cell;
     }
 
 
 
-    private static Color[] tile_corner_types = new Color[4];
+
+
+
 
     public void draw(Graphics g){
-        for (int i = 0; i < SIZE; i++){
+
+        for (int i = 0; i < SIZE ; i++){
             for (int j = 0; j < SIZE; j++){
+    
+                if (animal_grid[i][j].isEmpty()){
+                    if (map_terrain[i][j] == BUSH && map_food[i][j] == FOOD){
+                        g.setColor(FOOD_COLOUR);
+                    } else g.setColor(map_terrain_colours[i][j]);
 
-
-                int parameter = (int) (noise_food[i][j] * 255);
-
-                if (map_terrain[i][j] == BUSH && map_food[i][j] == FOOD){
-                    g.setColor(FOOD_COLOUR);
-                } else g.setColor(map_terrain_colours[i][j]);
-                // g.setColor(COLOURS_TERRAIN[map_terrain[i][j]]);
-                
-            
-                // g.setColor(new Color(parameter, parameter, parameter));
-                g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-
-            }
+                    g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                } else {
+                    g.setColor(animal_grid[i][j].getColor());
+                    g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE); 
+                }
+            }       
         }
-
-
-        // for (int i = 0; i < SIZE ; i++){
-        //     for (int j = 0; j < SIZE; j++){
-                // if (grid[i][j].isEmpty()){
-                //     for (int x = i * CELL_SIZE; x < i * CELL_SIZE + CELL_SIZE; i++){
-                //         for (int y = j * CELL_SIZE; y < j * CELL_SIZE + CELL_SIZE; j++){
-                //             g.setColor(new Color(0, (int) (noise_grid[x][y] * 255), 0));
-                //             g.fillRect(x, y, 1, 1);
-                //         }
-                //     }
-                // }
-
-
-        //         g.setColor(grid[i][j].getColor());
-        //         g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE); 
-        //     }       
-        // }
-
     }
 
  
