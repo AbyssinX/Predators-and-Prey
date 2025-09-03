@@ -1,3 +1,4 @@
+package Animals;
 import java.awt.Color;
 
 public class Predator extends Cell{

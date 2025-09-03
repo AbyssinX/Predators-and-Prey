@@ -1,3 +1,4 @@
+package World;
 import java.util.Random;
 
 public class PerlinNoise {

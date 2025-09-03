@@ -1,16 +1,10 @@
+package World;
+
 import java.awt.Color;
 
 public class HelpFunctions {
     
     public static int sum(double[] values){
-        int sum = 0;
-        for (double value : values){
-            sum += value;
-        }
-        return sum;
-    }
-
-    public static int sum(int[] values){
         int sum = 0;
         for (double value : values){
             sum += value;

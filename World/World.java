@@ -1,6 +1,12 @@
+package World;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Random;
+
+import Animals.Cell;
+import Animals.Predator;
+import Animals.Prey;
 
 
 public class World {
