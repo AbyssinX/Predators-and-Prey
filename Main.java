@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.Timer;
 
 /*
@@ -17,9 +20,6 @@ public class Main {
 
         timer = new Timer(70, simulation);
         timer.start();
-
-        
-
 
     }
     

@@ -5,8 +5,8 @@ public class NodeGene {
     int id;
     Type type;
     double bias;
-    double activation;  
-    boolean exists;                        
+    double activation;
+    boolean exists;
 
     public NodeGene(int id, Type type, double bias, double activation){
         if (id != -1){

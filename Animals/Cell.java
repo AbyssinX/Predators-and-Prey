@@ -1,18 +1,41 @@
 package Animals;
 import java.awt.Color;
+// import java.util.List;
 
 import NEAT.Genome;
-import NEAT.NodeGene;
+// import NEAT.NodeGene;
+
+
+enum  Action{
+
+    DoNothing,
+
+    GoNorth,
+    GoEast,
+    GoSouth,
+    GoWest,
+
+    GoNorthEast,
+    GoSouthEast,
+    GoSouthWest,
+    GoNorthWest
+    
+}
+
+
 
 public class Cell {
-    private static final int inputs = 3;      // change later
-    private static final int outputs = 1;     // change later
+    
+    protected static final int inputs = 3;      // change later
+    protected static final int outputs = 1;     // change later
 
     private Color color;
     private String tag;
     protected int speed;
     private int FOOD_BAR;
     private int WATER_BAR;
+
+    public Genome genome;
 
     public Cell(Color color, String tag){
         this.color = color;
@@ -22,30 +45,13 @@ public class Cell {
             this.FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE;
             this.WATER_BAR = Predator.MAX_WATER_BAR_VALUE;
 
-            Genome genome = new Genome(Genome.next_genome_id(), inputs, outputs);
-            for (int id = 0; id < inputs; id++){
-                NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0);
-                genome.nodes.add(input_neuron);
-            }
-            for (int id = inputs; id < inputs + outputs; id++){
-                NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0);
-                genome.nodes.add(output_neuron);                                                       // potentially could add links from the very start
-            }
 
         } else if (isPrey()){
 
             this.FOOD_BAR = Prey.MAX_FOOD_BAR_VALUE;
             this.FOOD_BAR = Prey.MAX_WATER_BAR_VALUE;
 
-            Genome genome = new Genome(Genome.next_genome_id(), inputs, outputs);
-            for (int id = 0; id < inputs; id++){
-                NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0);
-                genome.nodes.add(input_neuron);
-            }
-            for (int id = inputs; id < inputs + outputs; id++){
-                NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0);
-                genome.nodes.add(output_neuron);
-            }
+
 
         }
 
@@ -80,5 +86,9 @@ public class Cell {
     public void setWaterBar(int x){
         this.WATER_BAR = x;
     }
+
+
+
+
     
 }
