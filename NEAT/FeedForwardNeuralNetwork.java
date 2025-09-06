@@ -16,7 +16,6 @@ class NeuronInput {
 }
 
 class Neuron {
-    // Activation activation;
     int neuron_id;
     double bias;
     List<NeuronInput> inputs;
@@ -31,14 +30,14 @@ class Neuron {
 
 
 
-public class FeedForwarNeuralNetwork {
+public class FeedForwardNeuralNetwork {
 
     Activation activation = new Activation();
-    private List<Integer> input_ids;
-    private List<Integer> output_ids;
+    public List<Integer> input_ids;
+    public List<Integer> output_ids;
     private List<Neuron> neurons;
 
-    public FeedForwarNeuralNetwork(List<Integer> input_ids, List<Integer> output_ids, List<Neuron> neurons){
+    public FeedForwardNeuralNetwork(List<Integer> input_ids, List<Integer> output_ids, List<Neuron> neurons){
         this.input_ids = input_ids;
         this.output_ids = output_ids;
         this.neurons = neurons;
@@ -46,7 +45,7 @@ public class FeedForwarNeuralNetwork {
 
 
 
-    // don't fully understand how this works
+   
     public List<Double> activate(List<Double> inputs){      // static or not static?
         assert(input_ids.size() == inputs.size());          // inputs' order needs to match input_ids' order
 
@@ -56,14 +55,13 @@ public class FeedForwarNeuralNetwork {
             values.put(input_id, inputs.get(i));
         }
 
-        for (int output_id : output_ids){
-            values.put(output_id, 0.0);
-        }
+        
 
         for (Neuron neuron : neurons){
+
             double value = 0;
+
             for (NeuronInput input : neuron.inputs){
-                assert(values.containsKey(input.input_id));
                 value += values.get(input.input_id) * input.weight;
             }
             value += neuron.bias;
@@ -81,30 +79,36 @@ public class FeedForwarNeuralNetwork {
 
     }
 
+
     
-    public static FeedForwarNeuralNetwork createFromGenome(Genome genome){
+    public static FeedForwardNeuralNetwork createFromGenome(Genome genome){
         List<Integer> inputs =  genome.make_input_ids();
         List<Integer> outputs = genome.make_output_ids();
-        List<List<Integer>> layers = genome.createLayers(inputs, genome);
-
+        List<List<Integer>> layers = genome.createLayers(inputs, outputs, genome);
 
         List<Neuron> neurons = new ArrayList<>();
         for (List<Integer> layer : layers){
             for (int neuron_id : layer){
                 List<NeuronInput> neuronInputs = new ArrayList<>();
+
                 for (ConnectionGene connection : genome.connections){
+             
+
                     if (neuron_id == connection.outNode){
                         neuronInputs.add(new NeuronInput(connection.inpNode, connection.weight));
                     }
                 }
+        
                 NodeGene neuron = genome.findNeuron(neuron_id);
+              
                 neurons.add(new Neuron(neuron_id, neuron.bias, neuronInputs));
             }
         }
 
-        return new FeedForwarNeuralNetwork(inputs, outputs, neurons);
+
+        return new FeedForwardNeuralNetwork(inputs, outputs, neurons);
 
     }
 
-    
+
 }

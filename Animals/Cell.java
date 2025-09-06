@@ -2,40 +2,29 @@ package Animals;
 import java.awt.Color;
 // import java.util.List;
 
+import NEAT.FeedForwardNeuralNetwork;
 import NEAT.Genome;
-// import NEAT.NodeGene;
+import NEAT.Action;
 
-
-enum  Action{
-
-    DoNothing,
-
-    GoNorth,
-    GoEast,
-    GoSouth,
-    GoWest,
-
-    GoNorthEast,
-    GoSouthEast,
-    GoSouthWest,
-    GoNorthWest
-    
-}
 
 
 
 public class Cell {
     
-    protected static final int inputs = 3;      // change later
-    protected static final int outputs = 1;     // change later
+    public static final int inputs = 4;      // change later
+    protected static final int outputs = 4;     // change later
 
     private Color color;
     private String tag;
     protected int speed;
-    private int FOOD_BAR;
-    private int WATER_BAR;
+    public Action direction; // !
+    public int FOOD_BAR;
+    public int WATER_BAR;
+
+    public boolean alive = true;
 
     public Genome genome;
+    public FeedForwardNeuralNetwork NeuralNetwork;
 
     public Cell(Color color, String tag){
         this.color = color;

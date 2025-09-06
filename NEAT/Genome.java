@@ -1,19 +1,29 @@
 package NEAT;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+
+import javax.swing.Timer;
 
 import Animals.Predator;
 import Animals.Prey;
 import NEAT.NodeGene.Type;
+import World.Simulation;
+ import World.World;
+
 
 /*
  * TODO
  * * Finish mutatation of weights
  * * Add speciation
  * * Elitism 
- * * 
+ * * Improve reproduction functionality ???
+ * * Make the graph connected from the very beginning
+ * * Check the power of mutation
+ * * During mutation i initiate connections with no weights - fix this - DONE
  */
 
 
@@ -71,6 +81,7 @@ public class Genome {
 
     public double fitness;
 
+    private static Timer timer;
 
 
     public Genome(int genomeId, int inputs, int outputs){
@@ -80,16 +91,6 @@ public class Genome {
         this.number_of_inputs = inputs;
         this.number_of_outputs = outputs;
     }
-
-    // public Genome(int genomeId, List<NodeGene> nodes_given, List<ConnectionGene> connections_given){
-    //     this.nodes = nodes_given;             
-    //     this.connections = connections_given;
-    //     this.genomeId = genomeId;
-    //     int[] count_types = count_neurons();
-    //     number_of_inputs = count_types[0];
-    //     number_of_outputs = count_types[1];
-    // }
-
 
 
 
@@ -107,39 +108,35 @@ public class Genome {
 
 
     
-    public static void evaluateFitnessPredator(Predator predator) {
-        // Build neural net from this genome                    // ???               
-        // Run simulation
+    public static void evaluateFitnessPredator(Simulation simulation) {   // did I do something wrong here?
+        // Build neural net from this genome                              
+        // Run simulation                                       
         // Return fitness (e.g., prey caught or survival time)
 
+        int max_steps = 1000;
 
+        // predator.NeuralNetwork = FeedForwarNeuralNetwork.createFromGenome(predator.genome);
+        for (int counter = 0; counter < max_steps; counter++){
 
+            timer = new Timer(0, simulation);
+            timer.start();
 
-
-
-
-
-
-
-
-
-
-
-
-
+        }
         
+        timer.stop();
 
-
-        // return 0.0;
+    
+        // predator.genome.fitness = predator.staying_alive; //+ predator.preysEaten;
     }
+
 
 
     public static void evaluateFitnessPrey(Prey prey) {
         // Build neural net from this genome                    // ???               
-        // Run simulation
-        // Return fitness (e.g., prey caught or survival time)
+        // Run simulation                                       // I run the simulation first and then call this function
+        // Return fitness (e.g., survival time)
 
-
+        prey.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(prey.genome);
 
 
 
@@ -190,11 +187,14 @@ public class Genome {
 
     
     private static void add_link(Genome genome){
-        int input =  random.nextInt(genome.nodes.size() + 1);
-        int output = random.nextInt(genome.nodes.size() - genome.number_of_inputs + 1) + genome.number_of_inputs;
+        int input =  random.nextInt(genome.nodes.size());
+        int output = random.nextInt(genome.nodes.size() - genome.number_of_inputs) + genome.number_of_inputs;
 
-  
-        if (create_a_cycle(input, output, genome)) return;
+
+        List<Integer> existent_output = genome.make_output_ids();
+
+        if (existent_output.contains(input)) return;
+        if (isReachable(input, output, genome)) return;
   
         ConnectionGene possible_connection = connected(input, output, genome);  
         if (possible_connection.exists){ 
@@ -202,7 +202,7 @@ public class Genome {
             return;
         }
 
-        ConnectionGene new_connection = new ConnectionGene(input, output, 0 , true); // what weight should there be? 
+        ConnectionGene new_connection = new ConnectionGene(input, output, new_value() , true); // what weight should there be? 
         genome.connections.add(new_connection);
 
 
@@ -232,12 +232,27 @@ public class Genome {
         return connected; // none existent connection
     }
 
-    private static boolean create_a_cycle(int input, int output, Genome genome){      // TODO: i need to improve this. The function checks only very basic cycles.
+    // REPEAT THIS BIT!
+
+    private static boolean isReachable(int input, int output, Genome genome){
+        Set<Integer> visited = new HashSet<>();
+        return creates_a_cycle(input, output, visited, genome);
+    }
+
+    private static boolean creates_a_cycle(int current, int finish, Set<Integer> visited, Genome genome){   
+        
+        if (current == finish) return true;
+        if (visited.contains(current)) return false;
+        visited.add(current);
+
         for (ConnectionGene connection : genome.connections){
-            if (connection.inpNode == output && connection.outNode == input){
-                return true;
+            if (connection.enabled && connection.inpNode == current){
+                if (creates_a_cycle(connection.outNode, finish, visited, genome)) {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 
@@ -258,7 +273,7 @@ public class Genome {
         ConnectionGene old_connection = genome.connections.get(random.nextInt(genome.connections.size()));
         old_connection.enabled = false;
 
-        NodeGene new_neuron = new NodeGene(genome.nodes.size()+1, Type.HIDDEN, 0, 0); // activation ? bias?
+        NodeGene new_neuron = new NodeGene(genome.nodes.size(), Type.HIDDEN, new_value(), new_value()); // activation ? bias?
         genome.nodes.add(new_neuron);
         genome.number_of_hidden++;
 
@@ -295,7 +310,7 @@ public class Genome {
 
     private static void mutate_weights(Genome genome){     // How to combine lower functions into one?
         for (ConnectionGene connection : genome.connections){
-            if (random.nextDouble() < 0.2){
+            if (random.nextDouble() < 0.5){
                 connection.weight = mutate_delta(connection.weight);
             }
         }
@@ -303,7 +318,7 @@ public class Genome {
     }
 
 
-    private static double new_value(){
+    public static double new_value(){
         return clamp(random.nextGaussian(mean, stdev));
     }
 
@@ -430,18 +445,18 @@ public class Genome {
 
 
 
-    private int[] count_neurons(){
-        int counter_input = 0;
-        int counter_output = 0;
-        for (NodeGene neuron : this.nodes){
-            if (neuron.type == Type.INPUT){
-                counter_input++;
-            } else if (neuron.type == Type.OUTPUT){
-                counter_output++;
-            } 
-        }
-        return new int[] {counter_input, counter_output};
-    }
+    // private int[] count_neurons(){
+    //     int counter_input = 0;
+    //     int counter_output = 0;
+    //     for (NodeGene neuron : this.nodes){
+    //         if (neuron.type == Type.INPUT){
+    //             counter_input++;
+    //         } else if (neuron.type == Type.OUTPUT){
+    //             counter_output++;
+    //         } 
+    //     }
+    //     return new int[] {counter_input, counter_output};
+    // }
 
     
 
@@ -465,7 +480,7 @@ public class Genome {
     */ 
 
     // How do i combine the following two functions?
-    public static void reproducePredator(List<Predator> predators){
+    public static void reproducePredator(List<Predator> predators){        // reproduce only if alive ???
         Predator.sortByFitness(predators);
 
         int reproduction_cutoff = (int) Math.ceil(survival_threshold * predators.size());
@@ -479,6 +494,11 @@ public class Genome {
             Genome offspring_genome = crossover(parent1.genome, parent2.genome);
             mutate(offspring_genome);
             predators.get(i + reproduction_cutoff).genome = offspring_genome;
+            predators.get(i + reproduction_cutoff).alive = true;              // make them alive once they reproduce ???
+                                                                              // I'll need to make it better in the future
+            predators.get(i + reproduction_cutoff).FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE; // refill their stomachs
+
+
 
         }
 
@@ -530,37 +550,74 @@ public class Genome {
     }
 
 
-    public List<List<Integer>> createLayers(List<Integer> inputs, Genome genome){ // not sure this is gonna work
+
+
+    // REPEAT THIS BIT!
+    public List<List<Integer>> createLayers(List<Integer> inputs, List<Integer> outputs, Genome genome){ // not sure this is gonna work
         List<List<Integer>> layers = new ArrayList<>();
-        List<Integer> layer = new ArrayList<>();
-        layers.add(inputs);
+        Set<Integer> assigned = new HashSet<>(inputs);
 
-        for (int i = 0; i < layers.size(); i++){                       
-            for (int id : layers.get(i)){
-                List<Integer> connectedTo = connectedTo(id, genome);
+        layers.add(new ArrayList<>(inputs));
 
-                if (!connectedTo.isEmpty()){
-                    for (int hidden_id : connectedTo){
-                        if (hidden_id >= number_of_inputs && hidden_id <= (number_of_inputs + number_of_outputs)) { // does this properly work?
-                            continue;
-                        }
-                        layer.add(hidden_id);
-                    }
+        while (assigned.size() < genome.nodes.size() - outputs.size()){     // less than or equal to ? 
+            List<Integer> newLayer = new ArrayList<>();
+
+            for (NodeGene node : genome.nodes){
+                if (assigned.contains(node.id) || inputs.contains(node.id) || outputs.contains(node.id)) {
+                    continue;  // already placed or in I/O
                 }
 
+                boolean ready = true;
+                for (ConnectionGene connection : genome.connections){
+                    if (connection.outNode == node.id && connection.enabled){
+                        if (!assigned.contains(connection.inpNode)){
+                            ready = false;
+                            break;
+                        }
+                    }
+                }
+                if (ready){
+                    newLayer.add(node.id);
+                }
             }
-            if (!layer.isEmpty()){
-                layers.add(layer);
-                layer.clear();
+            if (newLayer.isEmpty()) {
+                throw new RuntimeException("Cycle detected in genome (recurrent connection)!");
             }
-
+            layers.add(newLayer);
+            assigned.addAll(newLayer);
         }
-        layers.remove(0);
+        layers.add(new ArrayList<>(outputs));
 
+        for (NodeGene node : genome.nodes){
+            // System.out.println("----------------------------------------------------------------------------------");
+            // System.out.println(node.id);
+            List<Boolean> check = new ArrayList<>();
+            for (List<Integer> layer : layers){
+                check.add(layer.contains(node.id));
+            }
+            if (allFalse(check)) {
+                System.out.println(node.id + "is not present in layers: " + layers);
+            }
+        }
+
+        
+        // System.out.println(layers);
         return layers;
 
 
     }
+
+    private boolean allFalse(List<Boolean> check){
+        boolean result = true;
+        for (boolean value : check){
+            if (value) result = false;
+        }
+        return result;
+    }
+
+
+
+
 
     private List<Integer> connectedTo(int neuronId, Genome genome){
 

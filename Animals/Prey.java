@@ -1,7 +1,10 @@
 package Animals;
 import java.awt.Color;
 import java.util.List;
+import java.util.Random;
 
+import NEAT.Action;
+import NEAT.FeedForwardNeuralNetwork;
 import NEAT.Genome;
 import NEAT.NodeGene;
 
@@ -26,6 +29,11 @@ public class Prey extends Cell{
             NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0);
             super.genome.nodes.add(output_neuron);
         }
+
+        Random random = new Random();
+        super.direction = Action.values()[random.nextInt(Action.values().length)];
+        super.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(genome);    // maybe i should leave it 
+
     }
 
 

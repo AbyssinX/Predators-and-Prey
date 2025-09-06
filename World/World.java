@@ -213,13 +213,14 @@ public class World {
         for (int i = 0; i < SIZE ; i++){
             for (int j = 0; j < SIZE; j++){
     
-                if (animal_grid[i][j].isEmpty()){
+                if (animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive){ // || animal_grid[i][j].alive == false
                     if (map_terrain[i][j] == BUSH && map_food[i][j] == FOOD){
                         g.setColor(FOOD_COLOUR);
                     } else g.setColor(map_terrain_colours[i][j]);
 
                     g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 } else {
+                    // System.out.println(animal_grid[i][j].alive);
                     g.setColor(animal_grid[i][j].getColor());
                     g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE); 
                 }

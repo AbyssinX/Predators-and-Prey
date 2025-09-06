@@ -1,4 +1,7 @@
+
 import javax.swing.JFrame;
+
+import World.Simulation;
 
 public class WindowManager {
 
