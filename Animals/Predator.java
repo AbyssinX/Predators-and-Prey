@@ -6,17 +6,17 @@ import java.util.Random;
 
 import NEAT.Action;
 import NEAT.ConnectionGene;
-import NEAT.FeedForwardNeuralNetwork;
 import NEAT.Genome;
 import NEAT.NodeGene;
 
 public class Predator extends Cell{
     
-    public final static int MAX_FOOD_BAR_VALUE = 20;
+    public final static int MAX_FOOD_BAR_VALUE = 200;
     public final static int MAX_WATER_BAR_VALUE = 100;
     // private static final int LIFETIME = 100;
     
     public int staying_alive = 0;
+    // public int preysEaten = 0;
     
 
     public Predator(Color color, int speed){  // I need to change the speed functionality 

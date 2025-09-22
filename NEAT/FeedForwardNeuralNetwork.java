@@ -62,7 +62,9 @@ public class FeedForwardNeuralNetwork {
             double value = 0;
 
             for (NeuronInput input : neuron.inputs){
+
                 value += values.get(input.input_id) * input.weight;
+
             }
             value += neuron.bias;
             value = activation.sigmoid(value);
@@ -92,9 +94,8 @@ public class FeedForwardNeuralNetwork {
                 List<NeuronInput> neuronInputs = new ArrayList<>();
 
                 for (ConnectionGene connection : genome.connections){
-             
 
-                    if (neuron_id == connection.outNode){
+                    if (neuron_id == connection.outNode && connection.enabled){
                         neuronInputs.add(new NeuronInput(connection.inpNode, connection.weight));
                     }
                 }

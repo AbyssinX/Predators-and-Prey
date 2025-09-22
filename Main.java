@@ -25,7 +25,7 @@ public class Main {
 
         WindowManager.createWindow(simulation);
 
-        timer = new Timer(70, simulation);
+        timer = new Timer(0, simulation);
         timer.start();
 
     }

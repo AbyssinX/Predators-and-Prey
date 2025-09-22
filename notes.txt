@@ -1,0 +1,10 @@
+-------------- Resolved ------------------
+* Cycles are still being created. I don't know why 
+    I think the issue was caused by applying isReachable function in the wrong direction.
+    Moreover, i had functionality to enable dissabled links that shouldn't happen.
+
+-----------------------------------------
+* Do predators learn? -- how can i be assured 
+* Why do predators move, then stop, then dissappear. They shouldn't have an ability to stop.
+    I might have fixed it. Confirm this later
+    Still do that sometimes

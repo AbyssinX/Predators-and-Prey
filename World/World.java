@@ -40,14 +40,14 @@ public class World {
     public static int SIZE = 140;
     public static int CELL_SIZE = 5;
     public static int WORLD_SIZE = SIZE * CELL_SIZE;
-    private static Color MARK_BACKGROUND = new Color(0, 0, 0); // I need this for the functionality of the cells.
-    private static Color PREY_COLOR = new Color(124,252,0);
-    private static Color PREDATOR_COLOR = new Color(183,53,79);
+    public static Color MARK_BACKGROUND = new Color(0, 0, 0); // I need this for the functionality of the cells.
+    public static Color PREY_COLOR = new Color(124,252,0);
+    public static Color PREDATOR_COLOR = new Color(183,53,79);
 
 
 
     private Cell[][] animal_grid;
-    private final static int MAXIMUM_ANIMAL_COUNT = 100;            // allows me to control how many actors are spawned
+    public final static int MAXIMUM_ANIMAL_COUNT = 150;            // allows me to control how many actors are spawned
     private double[][] noise_grid = new double[SIZE][SIZE];
     private double[][] noise_food = new double[SIZE][SIZE];
 
@@ -89,7 +89,7 @@ public class World {
 
         for (int i = 0; i < SIZE; i++){
             for (int j = 0; j < SIZE; j++){
-                if (random.nextDouble() > 0.995 && animal_count < MAXIMUM_ANIMAL_COUNT){ 
+                if (random.nextDouble() > 0.992 && animal_count < MAXIMUM_ANIMAL_COUNT){ 
                     this.animal_grid[i][j] = random.nextBoolean() ? new Predator(PREDATOR_COLOR, 1) : new Prey(PREY_COLOR, 1);
                     animal_count++;
                 } else {
@@ -213,11 +213,11 @@ public class World {
         for (int i = 0; i < SIZE ; i++){
             for (int j = 0; j < SIZE; j++){
     
-                if (animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive){ // || animal_grid[i][j].alive == false
+                if (animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive){
                     if (map_terrain[i][j] == BUSH && map_food[i][j] == FOOD){
                         g.setColor(FOOD_COLOUR);
                     } else g.setColor(map_terrain_colours[i][j]);
-
+                
                     g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 } else {
                     // System.out.println(animal_grid[i][j].alive);

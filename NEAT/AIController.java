@@ -19,8 +19,6 @@ public class AIController {
         List<Double> inputs = extract_inputs_predator(x, y, world, copy);
         List<Double> outputs = nn.activate(inputs);
 
-
-
         int max_idx = 0;
     
         for (int i = 0; i < inputs.size(); i++){
@@ -30,7 +28,6 @@ public class AIController {
             
         
         }
-        
         
         
         return Action.values()[max_idx];
@@ -52,7 +49,7 @@ public class AIController {
         Action direction =  world.getAnimalGrid()[x][y].direction;
 
         boolean foodFound = false;
-        int[] foodPosition = new int[2];
+        int[] foodPosition = new int[2];              // there will be a problem if multiple preys detected
         // Determine whether the food is visible
         switch(direction){
             case Action.North : 

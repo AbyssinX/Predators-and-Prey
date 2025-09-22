@@ -169,17 +169,17 @@ public class Genome {
         // What probabilities should I set for each mutation?
         double chance = random.nextDouble(); 
         if (chance < 0.5){
-            add_link(genome);
+            add_link(genome);      
         } else if (chance < 0.6){
             remove_link(genome);
         } else if (chance < 0.75){
-            add_neuron(genome);
+            add_neuron(genome);           
         } else {
             remove_neuron(genome);
         }
 
         if (random.nextDouble() < 0.6){
-            mutate_weights(genome);           // ?
+            mutate_weights(genome);          
         }
         
     }
@@ -187,20 +187,20 @@ public class Genome {
 
     
     private static void add_link(Genome genome){
-        int input =  random.nextInt(genome.nodes.size());
-        int output = random.nextInt(genome.nodes.size() - genome.number_of_inputs) + genome.number_of_inputs;
-
+        int input =  random.nextInt(genome.nodes.size()); 
+        int output = random.nextInt(genome.nodes.size() - genome.number_of_inputs) + genome.number_of_inputs; // ensures I don't pick input as a target
 
         List<Integer> existent_output = genome.make_output_ids();
 
-        if (existent_output.contains(input)) return;
-        if (isReachable(input, output, genome)) return;
-  
+        if (existent_output.contains(input)) return; // ensures I don't pick output as a source
+        if (input == output) return;
+
         ConnectionGene possible_connection = connected(input, output, genome);  
-        if (possible_connection.exists){ 
-            possible_connection.enabled = true;           // what about links that got disabled during the addition of a neuron?
-            return;
-        }
+        if (possible_connection.exists) return;
+        
+        // IMPORTANT: check reachability in the *correct* direction:
+        // if target can already reach source, adding source->target would create a cycle
+        if (isReachable(output, input, genome)) return;
 
         ConnectionGene new_connection = new ConnectionGene(input, output, new_value() , true); // what weight should there be? 
         genome.connections.add(new_connection);
@@ -231,18 +231,20 @@ public class Genome {
         }
         return connected; // none existent connection
     }
+    
 
-    // REPEAT THIS BIT!
+
 
     private static boolean isReachable(int input, int output, Genome genome){
         Set<Integer> visited = new HashSet<>();
         return creates_a_cycle(input, output, visited, genome);
     }
 
+
     private static boolean creates_a_cycle(int current, int finish, Set<Integer> visited, Genome genome){   
         
         if (current == finish) return true;
-        if (visited.contains(current)) return false;
+        if (visited.contains(current)) return false;  // already explored -> no path found along this branch
         visited.add(current);
 
         for (ConnectionGene connection : genome.connections){
@@ -256,6 +258,7 @@ public class Genome {
         return false;
     }
 
+   
 
     // -----------------
 
@@ -277,10 +280,10 @@ public class Genome {
         genome.nodes.add(new_neuron);
         genome.number_of_hidden++;
 
-        // genome.globalInnovationNumber += 1;
+
         ConnectionGene incoming = new ConnectionGene(old_connection.inpNode, new_neuron.id, 1, true);               
-        // genome.globalInnovationNumber += 1;
         ConnectionGene outgoing = new ConnectionGene(new_neuron.id, old_connection.outNode, old_connection.weight, true);  
+
         genome.connections.add(incoming);
         genome.connections.add(outgoing);
     }
@@ -314,7 +317,7 @@ public class Genome {
                 connection.weight = mutate_delta(connection.weight);
             }
         }
-        // do i update bias?
+        // TODO: do i update bias?
     }
 
 
@@ -326,7 +329,7 @@ public class Genome {
         double delta = clamp(random.nextGaussian(0, mutate_power));
         return clamp(value + delta);
     }
-    // there is also a chance that a value will be replaced by a new random value.
+    // TODO: there is also a chance that a value will be replaced by a new random value.
 
     private static double clamp(double x){
         return Math.min(max, Math.max(min, x));
@@ -415,7 +418,7 @@ public class Genome {
         assert(a.inpNode == b.inpNode);
         assert(a.outNode == b.outNode);
         double weight = (random.nextDouble() > 0.5) ? a.weight : b.weight;
-        boolean enabled = (random.nextDouble() > 0.5) ? a.enabled : b.enabled;    // TODO: set a chance that an inherited gene is disabled if it is disabld in either parent
+        boolean enabled = (random.nextDouble() > 0.5) ? a.enabled : b.enabled;    // TODO: set a chance that an inherited gene is disabled if it is disabled in either parent
                                            
         return new ConnectionGene(a.inpNode, a.outNode, weight, enabled);
     }
@@ -480,12 +483,12 @@ public class Genome {
     */ 
 
     // How do i combine the following two functions?
-    public static void reproducePredator(List<Predator> predators){        // reproduce only if alive ???
+    public static List<Predator> reproducePredator(List<Predator> predators){        // reproduce only if alive ???
         Predator.sortByFitness(predators);
 
         int reproduction_cutoff = (int) Math.ceil(survival_threshold * predators.size());
 
-        // List<Predator> new_generation = new ArrayList<>();
+        List<Predator> new_generation = new ArrayList<>();
         int modified_population_size = predators.size() - reproduction_cutoff;
 
         for (int i = 0; i < modified_population_size; i++){
@@ -493,14 +496,20 @@ public class Genome {
             Predator parent2 = predators.get(random.nextInt(reproduction_cutoff));
             Genome offspring_genome = crossover(parent1.genome, parent2.genome);
             mutate(offspring_genome);
-            predators.get(i + reproduction_cutoff).genome = offspring_genome;
-            predators.get(i + reproduction_cutoff).alive = true;              // make them alive once they reproduce ???
+
+            Predator offspring = new Predator(World.PREDATOR_COLOR, 1);
+            offspring.genome = offspring_genome;
+            
+            new_generation.add(offspring);
+            // predators.get(i + reproduction_cutoff).genome = offspring_genome;   
+            // predators.get(i + reproduction_cutoff).alive = true;              // make them alive once they reproduce ???
                                                                               // I'll need to make it better in the future
-            predators.get(i + reproduction_cutoff).FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE; // refill their stomachs
+            // predators.get(i + reproduction_cutoff).FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE; // refill their stomachs
 
 
 
         }
+        return new_generation;
 
     }
 
@@ -580,17 +589,66 @@ public class Genome {
                     newLayer.add(node.id);
                 }
             }
+
+
+
             if (newLayer.isEmpty()) {
-                throw new RuntimeException("Cycle detected in genome (recurrent connection)!");
+
+
+                // System.out.println("Genome: ");
+                // for (NodeGene node : genome.nodes){
+                //     System.out.print(node.id + " ");
+                // }
+                // System.out.println();
+
+                // System.out.println("Enabled connections: ");
+                // for (ConnectionGene connection : genome.connections){
+                //     if (connection.enabled){
+                //         System.out.print(connection.inpNode + " ");
+                //         System.out.println(connection.outNode);
+                //     }
+                // }
+                
+
+                // for (NodeGene node : genome.nodes){
+                    
+
+                //     if (assigned.contains(node.id) || inputs.contains(node.id) || outputs.contains(node.id)) {
+                //         continue;  // already placed or in I/O
+                //     }
+
+                    
+                //     for (ConnectionGene connection : genome.connections){
+                //         if (connection.outNode == node.id && connection.enabled){
+                //             if (!assigned.contains(connection.inpNode)){
+
+                //                 System.out.println("Input to this node: " + connection.inpNode);
+                //                 System.out.println("This node: " + node.id);
+                //                 System.out.println(isReachable(node.id, connection.inpNode, genome));
+                //                 System.out.println("----------------------");
+
+                                
+                //                 break;
+                //             }
+                //         }
+                //     }
+
+                // }
+
+                throw new RuntimeException("Cycle detected in genome (recurrent connection)!");      // TODO: This still happens sometimes. Figure out why?
+
+
             }
+
+
             layers.add(newLayer);
             assigned.addAll(newLayer);
         }
+
         layers.add(new ArrayList<>(outputs));
 
         for (NodeGene node : genome.nodes){
-            // System.out.println("----------------------------------------------------------------------------------");
-            // System.out.println(node.id);
+
             List<Boolean> check = new ArrayList<>();
             for (List<Integer> layer : layers){
                 check.add(layer.contains(node.id));
@@ -600,8 +658,7 @@ public class Genome {
             }
         }
 
-        
-        // System.out.println(layers);
+    
         return layers;
 
 
