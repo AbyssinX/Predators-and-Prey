@@ -6,52 +6,33 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import javax.swing.Timer;
-
 import Animals.Predator;
 import Animals.Prey;
 import NEAT.NodeGene.Type;
-import World.Simulation;
- import World.World;
+import World.World;
 
 
 /*
  * TODO
- * * Finish mutatation of weights
+ * * Finish mutatation of weights - DONE
  * * Add speciation
  * * Elitism 
  * * Improve reproduction functionality ???
- * * Make the graph connected from the very beginning
- * * Check the power of mutation
+ * * Make the graph connected from the very beginning - DONE
+ * * Check the power of mutation - DONE
  * * During mutation i initiate connections with no weights - fix this - DONE
+ * * Increase number of inputs for predators
+ *      Make they recognise borders (nes), other predators (nes), terrain (not nes)
+ * * 
  */
 
-
+ 
 class Activation {
     public double sigmoid(double x){
         return 1 / (1 + Math.pow(Math.E, -x));
     }
 }
 
-
-
-class Configuration {
-    double init_mean = 0;    
-    double init_stdev = 1;   
-    double min = -20;
-    double max = 20;
-    double mutation_rate = 0.2;
-    double mutate_power = 1.2;
-    double replace_rate = 0.05;
-
-
-}
-
-
-// class Individual {
-//     Genome genome;
-//     double fitness;
-// }
 
 
 
@@ -61,9 +42,11 @@ public class Genome {
     private static double stdev = 1;   
     private static double min = -20;
     private static double max = 20;
-    private static double mutation_rate = 0.2;
+    // private static double mutation_weights_rate = 0.2;
     private static double mutate_power = 1.2;
-    private static double replace_rate = 0.05;              // ? 
+    // private static double add_neuron_rate = 1.2;
+    // private static double add_link_rate = 0.05;              
+    // private static double weight_replace_rate = 1.2;
     private static double survival_threshold = 0.1;
 
 
@@ -81,7 +64,6 @@ public class Genome {
 
     public double fitness;
 
-    private static Timer timer;
 
 
     public Genome(int genomeId, int inputs, int outputs){
@@ -95,66 +77,23 @@ public class Genome {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     
-    public static void evaluateFitnessPredator(Simulation simulation) {   // did I do something wrong here?
+    public static int evaluateFitnessPredator(Predator predator) {  
         // Build neural net from this genome                              
         // Run simulation                                       
         // Return fitness (e.g., prey caught or survival time)
 
-        int max_steps = 1000;
-
-        // predator.NeuralNetwork = FeedForwarNeuralNetwork.createFromGenome(predator.genome);
-        for (int counter = 0; counter < max_steps; counter++){
-
-            timer = new Timer(0, simulation);
-            timer.start();
-
-        }
-        
-        timer.stop();
-
-    
-        // predator.genome.fitness = predator.staying_alive; //+ predator.preysEaten;
+        return predator.staying_alive + predator.preysEaten;
     }
 
 
 
-    public static void evaluateFitnessPrey(Prey prey) {
-        // Build neural net from this genome                    // ???               
-        // Run simulation                                       // I run the simulation first and then call this function
+    public static void evaluateFitnessPrey(Prey prey) {         
+        // Build neural net from this genome                              
+        // Run simulation                                       
         // Return fitness (e.g., survival time)
 
-        prey.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(prey.genome);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-        // return 0.0;
+        // return prey.staying_alive + prey.foodEaten;
     }
 
 
@@ -167,20 +106,21 @@ public class Genome {
     private static void mutate(Genome genome) {
         // Randomly add node, add connection, or perturb weights
         // What probabilities should I set for each mutation?
-        double chance = random.nextDouble(); 
-        if (chance < 0.5){
-            add_link(genome);      
-        } else if (chance < 0.6){
-            remove_link(genome);
-        } else if (chance < 0.75){
-            add_neuron(genome);           
-        } else {
-            remove_neuron(genome);
-        }
 
-        if (random.nextDouble() < 0.6){
-            mutate_weights(genome);          
-        }
+        double perturb_chance = 0.9;
+        double replace_chance = 0.1;
+        double chance = random.nextDouble(); 
+        if (chance < 0.05){                            // 5% chance
+            add_link(genome);      
+        } else if (chance < 0.06){                     // 1% chance
+            remove_link(genome);
+        } else if (chance < 0.09){                     // 3% chance
+            add_neuron(genome);           
+        } else if (chance < 0.11){                     // 2% chance
+            remove_neuron(genome);
+        } else if (chance < 1){                        // 89% chance
+            mutate_weights(genome, perturb_chance, replace_chance);          
+        } 
         
     }
 
@@ -248,7 +188,7 @@ public class Genome {
         visited.add(current);
 
         for (ConnectionGene connection : genome.connections){
-            if (connection.enabled && connection.inpNode == current){
+            if (connection.inpNode == current){   // connection.enabled &&               // need to check all connections
                 if (creates_a_cycle(connection.outNode, finish, visited, genome)) {
                     return true;
                 }
@@ -311,14 +251,32 @@ public class Genome {
     *  --------------------------------------------------------------------------
     */ 
 
-    private static void mutate_weights(Genome genome){     // How to combine lower functions into one?
+    private static void mutate_weights(Genome genome, double perturb_chance, double replace_chance){     // How to combine lower functions into one?
         for (ConnectionGene connection : genome.connections){
-            if (random.nextDouble() < 0.5){
-                connection.weight = mutate_delta(connection.weight);
+            if (random.nextDouble() < perturb_chance + replace_chance){
+                if (random.nextDouble() < replace_chance / (perturb_chance + replace_chance)){
+                    connection.weight = new_value();
+                } else connection.weight = mutate_delta(connection.weight);
             }
         }
-        // TODO: do i update bias?
+
+        for (NodeGene node : genome.nodes){
+            if (random.nextDouble() < perturb_chance + replace_chance){
+                if (random.nextDouble() < replace_chance / (perturb_chance + replace_chance)){
+                    node.bias = new_value();
+                } else node.bias = mutate_delta(node.bias);
+            }
+        }
     }
+
+
+    // private static void replace_weights(Genome genome){     // How to combine lower functions into one?
+    //     for (ConnectionGene connection : genome.connections){
+    //         if (random.nextDouble() < 0.1){
+    //             connection.weight = new_value();
+    //         }
+    //     }
+    // }
 
 
     public static double new_value(){
@@ -418,7 +376,13 @@ public class Genome {
         assert(a.inpNode == b.inpNode);
         assert(a.outNode == b.outNode);
         double weight = (random.nextDouble() > 0.5) ? a.weight : b.weight;
-        boolean enabled = (random.nextDouble() > 0.5) ? a.enabled : b.enabled;    // TODO: set a chance that an inherited gene is disabled if it is disabled in either parent
+        boolean enabled;
+        
+        if (a.enabled ^ b.enabled){                           // ^ - XOR
+            enabled = (random.nextDouble() < 0.25 ) ? true : false;   
+        } else {
+            enabled = a.enabled;
+        }
                                            
         return new ConnectionGene(a.inpNode, a.outNode, weight, enabled);
     }

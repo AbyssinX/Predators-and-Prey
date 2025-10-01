@@ -5,6 +5,10 @@
 
 -----------------------------------------
 * Do predators learn? -- how can i be assured 
+    * Do predators need more information to learn?
+    * I thought that at least they would start changing their direction when they see their prey. Does this happen?
 * Why do predators move, then stop, then dissappear. They shouldn't have an ability to stop.
     I might have fixed it. Confirm this later
     Still do that sometimes
+
+

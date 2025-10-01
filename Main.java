@@ -16,6 +16,7 @@ public class Main {
     private static Timer timer;
     // private static WindowManager window;
     private static Simulation simulation;
+    // public static List<Double> fitness_record = new ArrayList<>();
 
     public static void main(String[] args){
 
@@ -27,7 +28,7 @@ public class Main {
 
         timer = new Timer(0, simulation);
         timer.start();
-
+        // System.out.println(Simulation.fitness_record);
     }
     
 }

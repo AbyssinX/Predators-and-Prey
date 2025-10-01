@@ -16,7 +16,7 @@ public class Predator extends Cell{
     // private static final int LIFETIME = 100;
     
     public int staying_alive = 0;
-    // public int preysEaten = 0;
+    public int preysEaten = 0;
     
 
     public Predator(Color color, int speed){  // I need to change the speed functionality 

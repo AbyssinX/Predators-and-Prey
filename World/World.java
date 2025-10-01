@@ -37,7 +37,7 @@ public class World {
 
 
     // Configuration for the size of the world.
-    public static int SIZE = 140;
+    public static int SIZE = 135;
     public static int CELL_SIZE = 5;
     public static int WORLD_SIZE = SIZE * CELL_SIZE;
     public static Color MARK_BACKGROUND = new Color(0, 0, 0); // I need this for the functionality of the cells.
