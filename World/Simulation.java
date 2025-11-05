@@ -31,11 +31,12 @@ public class Simulation extends JPanel implements ActionListener {
     private Random random;
 
     private static int step = 0;
-    private static int reproduction_time = 3;              // If this term is constant, in the beginning the program will take forever to evolve.
+    private static int reproduction_time = 5;              // If this term is constant, in the beginning the program will take forever to evolve.
                                                            // I need to allow this to change in the accordance to the best fitness score. 
     private static int birth_time = 20;
-    public static Set<Double> fitness_record = new HashSet<>();    // create a graph to represent the rise in fitness
+    // public static Set<Double> fitness_record = new HashSet<>();    // create a graph to represent the rise in fitness
     private boolean paused = false;
+    public static Graph graph;
 
 
     public Simulation(){
@@ -43,6 +44,7 @@ public class Simulation extends JPanel implements ActionListener {
         this.world = new World(random);
 
         this.setPreferredSize(new Dimension(World.WORLD_SIZE, World.WORLD_SIZE));
+        graph = new Graph();
         
     }
 
@@ -56,6 +58,7 @@ public class Simulation extends JPanel implements ActionListener {
     private Set<Predator> predators = new HashSet<>();                      // make it a set instead (unique elements)
     // private List<Prey> offsprings_preys = new ArrayList<>();
     public List<Predator> offsprings_predators = new ArrayList<>();         // should be a set?
+
 
     @Override
     public void actionPerformed(ActionEvent e){
@@ -82,10 +85,13 @@ public class Simulation extends JPanel implements ActionListener {
             for (int j = 0; j < World.SIZE; j++){
 
                 if (animal_grid[i][j].isPredator()){
-                    
-                    predators.add((Predator) animal_grid[i][j]);
+                    Predator predator = (Predator) animal_grid[i][j];
+                    predators.add(predator);
             
                     predatorAction(i, j, newWorld); 
+
+                    predator.FOOD_BAR--;
+                    if (predator.FOOD_BAR <= 0) predator.alive = false;
 
                 } else if (animal_grid[i][j].isPrey()){
 
@@ -103,8 +109,8 @@ public class Simulation extends JPanel implements ActionListener {
             generate_new_predators(newWorld);
         }
 
-        if (remainingPreys(preys, 5)){           
-            generate_new_preys(newWorld);
+        if (remainingPreys(preys, 15)){           
+            generate_new_preys(newWorld, 15);
         }
 
         if (step % reproduction_time == 0 && !predators.isEmpty()){
@@ -122,7 +128,6 @@ public class Simulation extends JPanel implements ActionListener {
             preys.clear();
 
         }
-  
 
         
         this.world = newWorld;
@@ -137,32 +142,34 @@ public class Simulation extends JPanel implements ActionListener {
 
 
 
-
-
-
-
-
-
-
-
     
     public void predatorAction(int x, int y, World copy){
         Predator predator = (Predator) this.world.getAnimalGrid()[x][y];
 
-        if (predator.FOOD_BAR == 0){
-            predator.alive = false;
-        }
+        // if (predator.FOOD_BAR == 0){
+        //     predator.alive = false;
+        //     // copy.set(x, y, new Cell(World.MARK_BACKGROUND, "background"));
+        // }
 
 
         if (predator.alive){
             predator.staying_alive += 1;
             predator.genome.fitness = Genome.evaluateFitnessPredator(predator);
-            fitness_record.add(predator.genome.fitness);
-            // System.out.println(fitness_record);
 
-            predator.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(predator.genome);
+            // ---------------- Fitness data collection ----------------------
+            if (graph.fitness_record.empty()){
+                graph.registerData(predator.genome.fitness);
+            }
+            else if (graph.fitness_record.peek() >= predator.genome.fitness){
+                graph.registerData(graph.fitness_record.peek());
+                
+            } else graph.registerData(predator.genome.fitness);
+            // ---------------------------------------------------------------
+
+
+            
             AIController controller = new AIController();
-            Action action = controller.getActionPredator(predator.NeuralNetwork, x, y, this.world, copy); // what's next?
+            Action action = controller.getActionPredator(predator.NeuralNetwork, x, y, this.world, copy); 
 
 
             predator.direction = action;
@@ -170,38 +177,48 @@ public class Simulation extends JPanel implements ActionListener {
             int new_x;
             int new_y;
 
+        
+            predator.FOOD_BAR--;
+    
+            if ((step % birth_time == 0) && !offsprings_predators.isEmpty() && random.nextDouble() > 0.7){ 
+                predator.genome = offsprings_predators.get(random.nextInt(offsprings_predators.size())).genome;
+            }
+                    
+
             try{
+
                 new_x = x + action.getXDirection();
                 new_y = y + action.getYDirection();
 
-                if (preyIsEaten(new_x, new_y, this.world, copy)){
-                    world.getAnimalGrid()[new_x][new_y].alive = false;
-                    world.getAnimalGrid()[new_x][new_y] = new Cell(World.MARK_BACKGROUND, "background");
-                    copy.getAnimalGrid()[new_x][new_y] = new Cell(World.MARK_BACKGROUND, "background");
-                    predator.setFoodBar(Predator.MAX_FOOD_BAR_VALUE);
-                    predator.preysEaten++;
-                } else{
-                    predator.FOOD_BAR--;
-                } 
 
-
-
-
-                if ((world.getAnimalGrid()[new_x][new_y].isPredator() || copy.getAnimalGrid()[new_x][new_y].isPredator()) && (world.getAnimalGrid()[new_x][new_y].alive || copy.getAnimalGrid()[new_x][new_y].alive)) {
+                
+                // Handling movement
+                if ((world.getAnimalGrid()[new_x][new_y].alive || copy.getAnimalGrid()[new_x][new_y].alive) && (world.getAnimalGrid()[new_x][new_y].isPredator() || copy.getAnimalGrid()[new_x][new_y].isPredator())) { 
                     copy.set(x, y, predator);
                 } else {
+
+                    // Handling eating
+                    if (preyIsEaten(new_x, new_y, this.world, copy)){
+                        world.getAnimalGrid()[new_x][new_y].alive = false;
+                        copy.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
+                        world.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
+                        predator.setFoodBar(Predator.MAX_FOOD_BAR_VALUE);
+                        predator.preysEaten++;
+                    } 
+
+
                     copy.set(new_x, new_y, predator);
 
-                    if ((step % birth_time == 0) && !offsprings_predators.isEmpty() && random.nextDouble() > 0.7){
-                        copy.set(x,y, offsprings_predators.get(random.nextInt(offsprings_predators.size())));
-                    }
+
                 }
 
+                
+
+
+
+
             } catch (IndexOutOfBoundsException e){
-                new_x = x;
-                new_y = y;
-                copy.set(new_x, new_y, predator);
-                predator.FOOD_BAR--;
+                copy.set(x, y, predator);
             }
             
 
@@ -281,12 +298,12 @@ public class Simulation extends JPanel implements ActionListener {
     }
 
 
-    private void generate_new_preys(World newWorld){             
+    private void generate_new_preys(World newWorld, int m){             
         Cell[][] animal_grid = newWorld.getAnimalGrid();
         int count = 0;
         for (int i = 0; i < World.SIZE; i++){
             for (int j = 0; j < World.SIZE; j++){
-                if ((animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive) && count <= (World.MAXIMUM_ANIMAL_COUNT / 2) && random.nextDouble() > 0.996 ){ 
+                if ((animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive) && count <= (World.MAXIMUM_ANIMAL_COUNT / 2) && random.nextDouble() > 0.996){  // - m
                     
                     Cell new_prey = new Prey(World.PREY_COLOR, 1); // offsprings_prey.get(random.nextInt(offsprings_predators.size()));
                     // new_prey.FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE;
@@ -322,6 +339,7 @@ public class Simulation extends JPanel implements ActionListener {
     protected void paintComponent(Graphics g){
         super.paintComponent(g); // why do i need this?
         this.world.draw(g);
+        // this.graph.draw(g);
         super.repaint();
     }
 

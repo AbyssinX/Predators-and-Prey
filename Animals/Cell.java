@@ -40,9 +40,7 @@ public class Cell {
             this.FOOD_BAR = Prey.MAX_FOOD_BAR_VALUE;
             this.FOOD_BAR = Prey.MAX_WATER_BAR_VALUE;
 
-
-
-        }
+        } else alive = false;
 
 
 

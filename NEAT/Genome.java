@@ -27,11 +27,11 @@ import World.World;
  */
 
  
-class Activation {
-    public double sigmoid(double x){
-        return 1 / (1 + Math.pow(Math.E, -x));
-    }
-}
+// class Activation {
+//     public double sigmoid(double x){
+//         return 1 / (1 + Math.pow(Math.E, -x));
+//     }
+// }
 
 
 
@@ -64,6 +64,11 @@ public class Genome {
 
     public double fitness;
 
+    public double distanceToEnemy = 0;
+    public double countEnemies = 0;
+    private double averageDistanceToNearestEnemy = (countEnemies == 0) ? -20 : (distanceToEnemy / countEnemies) ;   // nearest?
+                                                                        // parameter -20 has to be adjusted
+
 
 
     public Genome(int genomeId, int inputs, int outputs){
@@ -78,12 +83,14 @@ public class Genome {
 
 
     
-    public static int evaluateFitnessPredator(Predator predator) {  
+    public static double evaluateFitnessPredator(Predator predator) {  
         // Build neural net from this genome                              
         // Run simulation                                       
         // Return fitness (e.g., prey caught or survival time)
-
-        return predator.staying_alive + predator.preysEaten;
+        
+        double fitness = (predator.preysEaten * 50.0) + (predator.staying_alive * 0.2) - (predator.genome.averageDistanceToNearestEnemy * 0.1);
+        
+        return fitness; 
     }
 
 
@@ -111,7 +118,8 @@ public class Genome {
         double replace_chance = 0.1;
         double chance = random.nextDouble(); 
         if (chance < 0.05){                            // 5% chance
-            add_link(genome);      
+            add_link(genome);
+                  
         } else if (chance < 0.06){                     // 1% chance
             remove_link(genome);
         } else if (chance < 0.09){                     // 3% chance
@@ -216,7 +224,8 @@ public class Genome {
         ConnectionGene old_connection = genome.connections.get(random.nextInt(genome.connections.size()));
         old_connection.enabled = false;
 
-        NodeGene new_neuron = new NodeGene(genome.nodes.size(), Type.HIDDEN, new_value(), new_value()); // activation ? bias?
+        int type_activation = random.nextInt(4);
+        NodeGene new_neuron = new NodeGene(genome.nodes.size(), Type.HIDDEN, new_value(), new_value(), type_activation); // activation ? bias?
         genome.nodes.add(new_neuron);
         genome.number_of_hidden++;
 
@@ -262,9 +271,12 @@ public class Genome {
 
         for (NodeGene node : genome.nodes){
             if (random.nextDouble() < perturb_chance + replace_chance){
-                if (random.nextDouble() < replace_chance / (perturb_chance + replace_chance)){
-                    node.bias = new_value();
-                } else node.bias = mutate_delta(node.bias);
+                // if (random.nextDouble() < replace_chance / (perturb_chance + replace_chance)){
+                //     node.bias = new_value();
+                // } else node.bias = mutate_delta(node.bias);
+                
+                if (random.nextDouble() < 0.8) node.bias += random.nextGaussian() * 0.1;
+                else node.bias = random.nextGaussian() * 0.5;
             }
         }
     }
@@ -341,7 +353,7 @@ public class Genome {
                 return neuron;
             }
         }
-        return new NodeGene(-1, Type.INPUT, 0, 0); // none existent neuron
+        return new NodeGene(-1, Type.INPUT, 0, 0, 0); // none existent neuron
     }
 
 
@@ -369,7 +381,7 @@ public class Genome {
         double bias = (random.nextDouble() > 0.5) ? a.bias : b.bias;                    
         double activation = (random.nextDouble() > 0.5) ? a.activation : b.activation;
         
-        return new NodeGene(new_id, a.type, bias, activation);
+        return new NodeGene(new_id, a.type, bias, activation, 0);
     }
 
     private static ConnectionGene crossoverConnection(ConnectionGene a, ConnectionGene b) {
@@ -463,7 +475,7 @@ public class Genome {
 
             Predator offspring = new Predator(World.PREDATOR_COLOR, 1);
             offspring.genome = offspring_genome;
-            
+            offspring.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(offspring_genome);
             new_generation.add(offspring);
             // predators.get(i + reproduction_cutoff).genome = offspring_genome;   
             // predators.get(i + reproduction_cutoff).alive = true;              // make them alive once they reproduce ???

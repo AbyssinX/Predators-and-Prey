@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 class NeuronInput {
     int input_id;
@@ -19,11 +20,29 @@ class Neuron {
     int neuron_id;
     double bias;
     List<NeuronInput> inputs;
+    int activation;
 
-    public Neuron(int neuron_id, double bias, List<NeuronInput> inputs){
+    public Neuron(int neuron_id, double bias, List<NeuronInput> inputs, int activation){
         this.neuron_id = neuron_id;
         this.bias = bias;
         this.inputs = inputs;
+        this.activation = activation;
+    }
+}
+
+class Activation {
+    public double tanh(double x) { return Math.tanh(x); }
+    public double elu(double x) { return x >= 0 ? x : Math.exp(x) - 1; }
+    public double leakyReLU(double x) { return x >= 0 ? x : 0.01 * x; }
+    public double sigmoid(double x) { return 1.0 / (1.0 + Math.exp(-x)); }
+
+    public double activate(double x, int type) {
+        return switch (type) {
+            case 0 -> tanh(x);
+            case 1 -> leakyReLU(x);
+            case 2 -> elu(x);
+            default -> sigmoid(x);
+        };
     }
 }
 
@@ -36,6 +55,7 @@ public class FeedForwardNeuralNetwork {
     public List<Integer> input_ids;
     public List<Integer> output_ids;
     private List<Neuron> neurons;
+    
 
     public FeedForwardNeuralNetwork(List<Integer> input_ids, List<Integer> output_ids, List<Neuron> neurons){
         this.input_ids = input_ids;
@@ -77,6 +97,7 @@ public class FeedForwardNeuralNetwork {
             outputs.add(values.get(output_id));
         }
 
+        // System.out.println(outputs);
         return outputs;
 
     }
@@ -101,8 +122,8 @@ public class FeedForwardNeuralNetwork {
                 }
         
                 NodeGene neuron = genome.findNeuron(neuron_id);
-              
-                neurons.add(new Neuron(neuron_id, neuron.bias, neuronInputs));
+
+                neurons.add(new Neuron(neuron_id, neuron.bias, neuronInputs, neuron.type_activation));
             }
         }
 

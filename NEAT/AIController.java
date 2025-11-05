@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import Animals.Cell;
 import World.World;
 
 public class AIController {
@@ -17,6 +18,7 @@ public class AIController {
     public Action getActionPredator(FeedForwardNeuralNetwork nn, int x, int y, World world, World copy){     // what do I base this function on?
 
         List<Double> inputs = extract_inputs_predator(x, y, world, copy);
+        // world.getAnimalGrid()[x][y].genome.averageDistanceToNearestEnemy = ;
         List<Double> outputs = nn.activate(inputs);
 
         int max_idx = 0;
@@ -123,24 +125,27 @@ public class AIController {
 
         // I decide which direction to go to based on how close the food source to a direction vector.
         if (foodFound){
-            for (int i = 0; i < world.getAnimalGrid()[x][y].inputs; i++){
+            double distance = magnitude(foodPosition[0] - x, foodPosition[1] - y);
+            world.getAnimalGrid()[x][y].genome.distanceToEnemy = distance;
+            world.getAnimalGrid()[x][y].genome.countEnemies += 1;
+
+            for (int i = 0; i < Cell.inputs; i++){
                 Action vector = Action.values()[i];
-                int dot_product = dot_product(foodPosition[0], foodPosition[1], vector.getXDirection(), vector.getYDirection());
+                int dot_product = dot_product(foodPosition[0] - x, foodPosition[1] - y, vector.getXDirection(), vector.getYDirection());
+                
 
                 if (dot_product >= 0){
-                    double angle = dot_product / magnitude(foodPosition[0], foodPosition[1]);
+                    double angle = dot_product / distance;
                     inputs.add(Math.cos(angle));
                 } else inputs.add(0.0);
                 
             }
         } else {
-            for (int i = 0; i < world.getAnimalGrid()[x][y].inputs; i++){
+            for (int i = 0; i < Cell.inputs; i++){
                 inputs.add(0.0);
             }
         }
-
-
-
+        
 
         return inputs;
     }

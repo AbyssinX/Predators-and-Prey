@@ -8,15 +8,17 @@ import NEAT.Action;
 import NEAT.ConnectionGene;
 import NEAT.Genome;
 import NEAT.NodeGene;
+import NEAT.FeedForwardNeuralNetwork;
 
 public class Predator extends Cell{
     
-    public final static int MAX_FOOD_BAR_VALUE = 200;
+    public final static int MAX_FOOD_BAR_VALUE = 1000;
     public final static int MAX_WATER_BAR_VALUE = 100;
     // private static final int LIFETIME = 100;
     
     public int staying_alive = 0;
     public int preysEaten = 0;
+    public double averageDistanceToNearestPrey = 0;
     
 
     public Predator(Color color, int speed){  // I need to change the speed functionality 
@@ -25,11 +27,11 @@ public class Predator extends Cell{
 
         super.genome = new Genome(Genome.next_genome_id(), inputs, outputs);
         for (int id = 0; id < inputs; id++){
-            NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0);
+            NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0, 0);
             super.genome.nodes.add(input_neuron);
         }
         for (int id = inputs; id < inputs + outputs; id++){
-            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0);
+            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 0);
             super.genome.nodes.add(output_neuron);                                                       // potentially could add links from the very start
         }
 
@@ -46,7 +48,7 @@ public class Predator extends Cell{
         Random random = new Random();
         super.direction = Action.values()[random.nextInt(Action.values().length)];
 
-        // super.NeuralNetwork = FeedForwarNeuralNetwork.createFromGenome(genome);
+        super.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(genome);
     }
 
     

@@ -7,12 +7,15 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import World.Simulation;
+import World.Graph;
 
 public class WindowManager{
 
     private static JFrame frame;
     public static JButton start = new JButton("Start");
     public static JButton pause = new JButton("Pause");
+
+    
 
     public static void createWindow(Simulation simulation){
 
@@ -29,13 +32,17 @@ public class WindowManager{
         pause.setActionCommand("PAUSE");
         start.addActionListener(simulation);
         pause.addActionListener(simulation);
-
+        
         controlPanel.add(start);
         controlPanel.add(Box.createHorizontalStrut(10));
         controlPanel.add(pause);
 
-        mainPanel.add(controlPanel, BorderLayout.SOUTH);
+        
+        JPanel fitnessPanel = new JPanel();
+        fitnessPanel.add(Simulation.graph);
+        controlPanel.add(fitnessPanel, BorderLayout.EAST);
 
+        mainPanel.add(controlPanel, BorderLayout.SOUTH);
 
         frame.setContentPane(mainPanel);
         frame.pack();

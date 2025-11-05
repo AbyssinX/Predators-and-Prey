@@ -6,15 +6,17 @@ public class NodeGene {
     Type type;
     double bias;
     double activation;
+    int type_activation;
     boolean exists;
 
-    public NodeGene(int id, Type type, double bias, double activation){
+    public NodeGene(int id, Type type, double bias, double activation, int type_activation){
         if (id != -1){
             exists = true;
         } 
         if (type == Type.HIDDEN){
             this.bias = bias;
             this.activation = activation;
+            this.type_activation = type_activation;
         }
 
         this.id = id;
