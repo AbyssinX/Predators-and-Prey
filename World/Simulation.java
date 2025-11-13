@@ -20,8 +20,8 @@ import Animals.Predator;
 import Animals.Prey;
 import NEAT.AIController;
 import NEAT.Action;
-import NEAT.FeedForwardNeuralNetwork;
 import NEAT.Genome;
+import NEAT.Species;
 
 
 
@@ -30,8 +30,8 @@ public class Simulation extends JPanel implements ActionListener {
     private World world;
     private Random random;
 
-    private static int step = 0;
-    private static int reproduction_time = 5;              // If this term is constant, in the beginning the program will take forever to evolve.
+    public static int step = 0;
+    private static int reproduction_time = 10;              // If this term is constant, in the beginning the program will take forever to evolve.
                                                            // I need to allow this to change in the accordance to the best fitness score. 
     private static int birth_time = 20;
     // public static Set<Double> fitness_record = new HashSet<>();    // create a graph to represent the rise in fitness
@@ -58,10 +58,16 @@ public class Simulation extends JPanel implements ActionListener {
     private Set<Predator> predators = new HashSet<>();                      // make it a set instead (unique elements)
     // private List<Prey> offsprings_preys = new ArrayList<>();
     public List<Predator> offsprings_predators = new ArrayList<>();         // should be a set?
+    List<Predator> new_gen = new ArrayList<>();
 
+    List<Predator> regeneration = new ArrayList<>();
+
+    public List<Species> all_species = new ArrayList<>();
+    public List<Species> offsprings_species = new ArrayList<>();
 
     @Override
     public void actionPerformed(ActionEvent e){
+
 
         // ---------------------------------------------- Button Handling ------------------------
         Object action = e.getActionCommand();
@@ -105,7 +111,7 @@ public class Simulation extends JPanel implements ActionListener {
         }
         
 
-        if (allDeadPredators(predators) && !offsprings_predators.isEmpty()){
+        if (allDeadPredators(predators) && !regeneration.isEmpty()){
             generate_new_predators(newWorld);
         }
 
@@ -118,18 +124,41 @@ public class Simulation extends JPanel implements ActionListener {
             // I want this to seem smooth. So I will update genomes for half of the animals and half will remain unchanged. 
             // But no animal actually disappear from a screen.
             
-            List<Predator> forReproduction = new ArrayList<>();
-            forReproduction.addAll(predators);
-            offsprings_predators = Genome.reproducePredator(forReproduction);               // need to work on this
-            
+            // List<Predator> forReproduction = new ArrayList<>();
+            // forReproduction.addAll(predators);
+            // offsprings_predators = Genome.reproducePredator(forReproduction);  
+
             // Genome.reproducePrey(preys);
 
-            predators.clear();                              // clear this after the reproduction step?
+
+
+            List<Predator> forReproduction = new ArrayList<>();
+            forReproduction.addAll(predators);
+            // List<Predator> predatorsList = predators.;
+            Genome.match_species(forReproduction, all_species);
+            offsprings_species = Genome.reproducePredatorSpecies(all_species, predators.size()); 
+            Graph.n_species = offsprings_species.size() ;
+
+            for (Species s : offsprings_species){
+                for (Predator predator : s.predators) {
+                    new_gen.add(predator);
+                    regeneration.add(predator);
+                }
+
+            }
+
+            Genome.adjustThreshold(offsprings_species);
+
+            predators.clear();                           // clear this after the reproduction step?
             preys.clear();
+
+            // Are those effects on reproduction time even useful?
+            if (reproduction_time != 5 && Graph.max_fitness < 1000) reproduction_time -= 1;
+
+            if ((Graph.max_fitness >= 1000 || step >= 5000) && reproduction_time < 20) reproduction_time += 1;
 
         }
 
-        
         this.world = newWorld;
     }
 
@@ -169,62 +198,67 @@ public class Simulation extends JPanel implements ActionListener {
 
             
             AIController controller = new AIController();
+            
             Action action = controller.getActionPredator(predator.NeuralNetwork, x, y, this.world, copy); 
-
-
             predator.direction = action;
 
             int new_x;
             int new_y;
 
-        
             predator.FOOD_BAR--;
     
-            if ((step % birth_time == 0) && !offsprings_predators.isEmpty() && random.nextDouble() > 0.7){ 
-                predator.genome = offsprings_predators.get(random.nextInt(offsprings_predators.size())).genome;
+            // if ((step % birth_time == 0) && !offsprings_predators.isEmpty() && random.nextDouble() > 0.7){ 
+            //     predator.genome = offsprings_predators.get(random.nextInt(offsprings_predators.size())).genome;
+
+            // }
+
+            if ((step % birth_time == 0) && !new_gen.isEmpty() && random.nextDouble() > 0.7){ 
+                Predator offspring = new_gen.get(random.nextInt(new_gen.size()));
+                predator.genome = offspring.genome;
+                // new_gen.remove(offspring);
             }
                     
 
-            try{
+        
+            new_x = x + action.getXDirection();
+            new_y = y + action.getYDirection();
 
-                new_x = x + action.getXDirection();
-                new_y = y + action.getYDirection();
-
-
-                
-                // Handling movement
-                if ((world.getAnimalGrid()[new_x][new_y].alive || copy.getAnimalGrid()[new_x][new_y].alive) && (world.getAnimalGrid()[new_x][new_y].isPredator() || copy.getAnimalGrid()[new_x][new_y].isPredator())) { 
-                    copy.set(x, y, predator);
-                } else {
-
-                    // Handling eating
-                    if (preyIsEaten(new_x, new_y, this.world, copy)){
-                        world.getAnimalGrid()[new_x][new_y].alive = false;
-                        copy.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
-                        world.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
-                        predator.setFoodBar(Predator.MAX_FOOD_BAR_VALUE);
-                        predator.preysEaten++;
-                    } 
-
-
-                    copy.set(new_x, new_y, predator);
-
-
-                }
-
-                
-
-
-
-
-            } catch (IndexOutOfBoundsException e){
+            if (new_x < 0 || new_x >= World.SIZE || new_y < 0 || new_y >= World.SIZE) {
+                // hit border → don't move
                 copy.set(x, y, predator);
+                return;
             }
+
+            world.set(x, y, new Cell(World.MARK_BACKGROUND, "background"));
             
+            // Handling movement
+            if ((world.getAnimalGrid()[new_x][new_y].alive || copy.getAnimalGrid()[new_x][new_y].alive) && (world.getAnimalGrid()[new_x][new_y].isPredator() || copy.getAnimalGrid()[new_x][new_y].isPredator())) { 
+                Predator clone = predator.cloneDeep(true);
+                copy.set(x, y, clone);
+
+            } else {
+
+                // Handling eating
+                if (preyIsEaten(new_x, new_y, this.world, copy)){
+                    // world.getAnimalGrid()[new_x][new_y].alive = false;                         // i need to make sure i record died preys here
+                    // world.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
+                    predator.setFoodBar(Predator.MAX_FOOD_BAR_VALUE);
+                    predator.preysEaten++;
+                } 
+
+                world.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
+                copy.set(new_x, new_y, predator);
 
 
+            }
 
-        } else copy.set(x, y, predator);
+                
+
+        } else {
+            world.set(x, y, new Cell(World.MARK_BACKGROUND, "background"));
+            copy.set(x, y, predator);    // do i need to set background for copy too? I record died predators. Maybe I shouldn't
+        }
+        
 
 
 
@@ -286,9 +320,12 @@ public class Simulation extends JPanel implements ActionListener {
             for (int j = 0; j < World.SIZE; j++){
                 if ((animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive) && count <= (World.MAXIMUM_ANIMAL_COUNT / 2) && random.nextDouble() > 0.996){
                     
-                    Cell new_predator = offsprings_predators.get(random.nextInt(offsprings_predators.size()));
-                    new_predator.FOOD_BAR = Predator.MAX_FOOD_BAR_VALUE;
-                    new_predator.alive = true;
+                    Cell new_predator = new Predator(World.PREDATOR_COLOR, 1);
+
+                    Predator predator = regeneration.get(random.nextInt(regeneration.size()));
+                    new_predator.genome = predator.genome.cloneDeep();
+                    regeneration.remove(predator);
+
                     newWorld.set(i, j, new_predator);
                     count++;
                 }

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 class NeuronInput {
     int input_id;
@@ -65,7 +64,7 @@ public class FeedForwardNeuralNetwork {
 
 
 
-   
+
     public List<Double> activate(List<Double> inputs){      // static or not static?
         assert(input_ids.size() == inputs.size());          // inputs' order needs to match input_ids' order
 
@@ -75,7 +74,7 @@ public class FeedForwardNeuralNetwork {
             values.put(input_id, inputs.get(i));
         }
 
-        
+   
 
         for (Neuron neuron : neurons){
 

@@ -3,10 +3,6 @@ package World;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Stack;
 
 import javax.swing.JPanel;
@@ -14,9 +10,11 @@ import javax.swing.JPanel;
 public class Graph extends JPanel{
 
     // private final static int X1 = 600;
-    private final int width = 150;
+    private final int width = 300;
     private final int height = 20;
     public Stack<Double> fitness_record;
+    public static int max_fitness = 0;
+    public static int n_species = 0;
 
     public Graph(){
         fitness_record = new Stack<>();
@@ -41,8 +39,14 @@ public class Graph extends JPanel{
         // g.drawRect(0, 0, width, height);
 
         if (!fitness_record.isEmpty()){
-            g.drawString("Max fitness: " + fitness_record.peek().intValue(), 5, 15);
+            Graph.max_fitness = fitness_record.peek().intValue();
+            g.drawString("Max fitness: " + Graph.max_fitness, 5, 15);
         }
+
+
+        // Graph.max_fitness = fitness_record.peek().intValue();
+        g.drawString("# of species: " + Graph.n_species, 150, 15);
+        
 
         // g.setColor(Color.GREEN);
         // for (int i = 1; i < fitness_record.size(); i++){

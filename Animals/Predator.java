@@ -18,7 +18,6 @@ public class Predator extends Cell{
     
     public int staying_alive = 0;
     public int preysEaten = 0;
-    public double averageDistanceToNearestPrey = 0;
     
 
     public Predator(Color color, int speed){  // I need to change the speed functionality 
@@ -38,7 +37,8 @@ public class Predator extends Cell{
         // Make a fully connected graph
         for (int input_id = 0; input_id < inputs; input_id++){
             for (int output_id = inputs; output_id < inputs + outputs; output_id++){
-                genome.connections.add(new ConnectionGene(input_id, output_id, Genome.new_value(), true));
+                int innovationNumber = Genome.getInnovation(input_id, output_id);
+                genome.connections.add(new ConnectionGene(input_id, output_id, Genome.new_value(), true, innovationNumber));
             }
         }
 
@@ -54,11 +54,27 @@ public class Predator extends Cell{
     
     public static void sortByFitness(List<Predator> predators){
 
-        predators.sort( (a, b) -> { return Double.compare(a.genome.fitness, b.genome.fitness); });
+        predators.sort( (a, b) -> { return Double.compare(b.genome.fitness, a.genome.fitness); });
         
     }
 
+    public Predator cloneDeep(boolean stats) {
+        Predator clone = new Predator(this.color, this.speed);
+        clone.genome = this.genome.cloneDeep(); // deep copy genes
+        clone.NeuralNetwork = FeedForwardNeuralNetwork.createFromGenome(clone.genome);
 
+        if (stats) {
+            clone.staying_alive = this.staying_alive;
+            clone.preysEaten = this.preysEaten;
+            clone.genome.distanceToEnemy = this.genome.distanceToEnemy;
+            clone.genome.countEnemies = this.genome.countEnemies;
+            clone.genome.facingEnemyCount = this.genome.facingEnemyCount;
+            clone.FOOD_BAR = this.FOOD_BAR;
+            clone.direction = this.direction;
+        }
+
+        return clone;
+    }
 
 
 }

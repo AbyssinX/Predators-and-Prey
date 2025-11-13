@@ -12,7 +12,7 @@ public class Prey extends Cell{
     
     public final static int MAX_FOOD_BAR_VALUE = 100;
     public final static int MAX_WATER_BAR_VALUE = 100;
-    private static final int LIFETIME = 120;
+    // private static final int LIFETIME = 120;
 
     
 

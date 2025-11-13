@@ -11,11 +11,11 @@ import NEAT.Action;
 
 public class Cell {
     
-    public static final int inputs = 4;      // change later
+    public static final int inputs = 16;      // change later
     protected static final int outputs = 4;     // change later
 
-    private Color color;
-    private String tag;
+    protected Color color;
+    protected String tag;
     protected int speed;
     public Action direction; // !
     public int FOOD_BAR;
@@ -74,7 +74,9 @@ public class Cell {
         this.WATER_BAR = x;
     }
 
-
+    public int getFoodBar(){
+        return this.FOOD_BAR;
+    }
 
 
     

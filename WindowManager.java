@@ -7,7 +7,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import World.Simulation;
-import World.Graph;
 
 public class WindowManager{
 

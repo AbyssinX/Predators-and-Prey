@@ -12,3 +12,113 @@
     Still do that sometimes
 
 
+Old methods for AIAction
+
+       // Action direction =  world.getAnimalGrid()[x][y].direction;
+
+        // double bestDist = Double.POSITIVE_INFINITY;
+        // int bestDx = 0, bestDy = 0;
+
+        // boolean foodFound = false;
+        // int[] foodPosition = new int[2];              // there will be a problem if multiple preys detected
+
+
+
+        //// Determine whether the food is visible
+        // switch(direction){
+        //     case Action.North : 
+
+            
+        //     for (int i = x-1; i <= x+1; i++){
+        //         for (int j = y; j <= y - sight; j--){      // ?
+        //             if (i < 0 || j < 0 || i >= World.SIZE || j >= World.SIZE) continue;
+
+        //             if (world.getAnimalGrid()[i][j].isPrey() || copy.getAnimalGrid()[i][j].isPrey()){
+        //                 int dx = i - x, dy = j - y;
+        //                 double distance = Math.sqrt(dx*dx + dy*dy);
+
+        //                 if (distance < bestDist) { bestDist = distance; bestDx = dx; bestDy = dy; }
+        //             }
+        //         }
+        //     }
+        //     break;
+
+        //     case Action.East : 
+        //     for (int i = x; i <= x + sight; i++){
+        //         for (int j = y - 1; j <= y + 1; j++){
+        //             if (i < 0 || j < 0 || i >= World.SIZE || j >= World.SIZE) continue;
+
+        //             if (world.getAnimalGrid()[i][j].isPrey() || copy.getAnimalGrid()[i][j].isPrey()){
+        //                 int dx = i - x, dy = j - y;
+        //                 double distance = Math.sqrt(dx*dx + dy*dy);
+
+        //                 if (distance < bestDist) { bestDist = distance; bestDx = dx; bestDy = dy; }
+        //             }
+        //         }
+        //     }
+        //     break;
+
+        //     case Action.South : 
+        //     for (int i = x-1; i <= x+1; i++){
+        //         for (int j = y; j <= y + sight; j++){     // ?
+        //             if (i < 0 || j < 0 || i >= World.SIZE || j >= World.SIZE) continue;
+
+        //             if (world.getAnimalGrid()[i][j].isPrey() || copy.getAnimalGrid()[i][j].isPrey()){
+        //                 int dx = i - x, dy = j - y;
+        //                 double distance = Math.sqrt(dx*dx + dy*dy);
+
+        //                 if (distance < bestDist) { bestDist = distance; bestDx = dx; bestDy = dy; }
+        //             }
+        //         }
+        //     }
+        //     break;
+
+        //     case Action.West : 
+        //     for (int i = x ; i <= x - sight; i--){   // ?
+        //         for (int j = y - 1; j <= y + 1; j++){
+        //             if (i < 0 || j < 0 || i >= World.SIZE || j >= World.SIZE) continue;
+
+        //             if (world.getAnimalGrid()[i][j].isPrey() || copy.getAnimalGrid()[i][j].isPrey()){
+        //                 int dx = i - x, dy = j - y;
+        //                 double distance = Math.sqrt(dx*dx + dy*dy);
+
+        //                 if (distance < bestDist) { bestDist = distance; bestDx = dx; bestDy = dy; }
+        //             }
+        //         }
+        //     }
+        //     break;
+        // }
+
+
+
+// // I decide which direction to go to based on how close the food source to a direction vector.
+        // if (foodFound){
+        //     double distance = magnitude(foodPosition[0] - x, foodPosition[1] - y);
+        //     world.getAnimalGrid()[x][y].genome.distanceToEnemy = distance;
+        //     world.getAnimalGrid()[x][y].genome.countEnemies += 1;
+
+
+
+        //     for (int i = 0; i < Cell.inputs; i++){
+        //         Action vector = Action.values()[i];
+        //         int dot_product = dot_product(foodPosition[0] - x, foodPosition[1] - y, vector.getXDirection(), vector.getYDirection());
+
+        //         if (dot_product >= 0){
+        //             double angle = dot_product / distance;
+
+        //             if (angle == 0){
+        //                 world.getAnimalGrid()[x][y].genome.facingEnemyCount += 1;
+        //             }
+                  
+
+        //             inputs.add(Math.cos(angle));
+
+        //         } else inputs.add(0.0);
+                
+        //     }
+        // } else {
+        //     for (int i = 0; i < Cell.inputs; i++){
+        //         inputs.add(0.0);
+        //     }
+        // }
+        
