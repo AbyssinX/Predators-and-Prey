@@ -65,7 +65,7 @@ public class FeedForwardNeuralNetwork {
 
 
 
-    public List<Double> activate(List<Double> inputs){      // static or not static?
+    public List<Double> activate(List<Double> inputs){      
         assert(input_ids.size() == inputs.size());          // inputs' order needs to match input_ids' order
 
         Map<Integer, Double> values = new HashMap<>();
@@ -86,7 +86,7 @@ public class FeedForwardNeuralNetwork {
 
             }
             value += neuron.bias;
-            value = activation.sigmoid(value);
+            value = activation.activate(value, neuron.activation);
             values.put(neuron.neuron_id, value);
         }
 
@@ -96,7 +96,6 @@ public class FeedForwardNeuralNetwork {
             outputs.add(values.get(output_id));
         }
 
-        // System.out.println(outputs);
         return outputs;
 
     }

@@ -22,11 +22,11 @@ public class Prey extends Cell{
 
         super.genome = new Genome(Genome.next_genome_id(), inputs, outputs);
         for (int id = 0; id < inputs; id++){
-            NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0, 0);
+            NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0, 0, 0);
             super.genome.nodes.add(input_neuron);
         }
         for (int id = inputs; id < inputs + outputs; id++){
-            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 0);
+            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 0, 1000);
             super.genome.nodes.add(output_neuron);
         }
 

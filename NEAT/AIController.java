@@ -18,29 +18,22 @@ public class AIController {
 
     }
 
-    double temperature = 0.2;  // lower = more deterministic 
 
     public Action getActionPredator(FeedForwardNeuralNetwork nn, int x, int y, World world, World copy){     // what do I base this function on?
-
+        Predator predator = (Predator) world.getAnimalGrid()[x][y];
         List<Double> inputs = extract_inputs_predator(x, y, world, copy);
         List<Double> outputs = nn.activate(inputs);
 
         Random random = new Random();
         double sum = 0.0;
 
-        // Action prev = world.getAnimalGrid()[x][y].direction;
-        // int prevIdx = prev.ordinal();
-        // if (prevIdx != 4) outputs.set(prevIdx, outputs.get(prevIdx) + 0.2);
-        
-        double normalizedFitness = world.getAnimalGrid()[x][y].genome.fitness / Graph.max_fitness;
-        double temperature = 0.1 + 0.8 * Math.exp(-4.0 * normalizedFitness);
+        double temperature = predator.genome.temperature; 
 
         for (double o : outputs) {
             sum += Math.exp(o / temperature);
         }
 
         // Softmax 
-        // double sum = outputs.stream().mapToDouble(Math::exp).sum();
         double r = random.nextDouble();                              
         double cumulative = 0;
         for (int i = 0; i < outputs.size(); i++) {
@@ -48,13 +41,14 @@ public class AIController {
             if (r < cumulative) return Action.values()[i];
         }
         return Action.values()[outputs.size()-1];
+
+
     }
 
 
 
     /*
      * Here i get the valuable information from the simulation.
-     * What information do I need?
      */
 
     private List<Double> extract_inputs_predator(int x, int y, World world, World copy){       
@@ -116,6 +110,12 @@ public class AIController {
             double angle = Math.atan2(bestDyPrey, bestDxPrey) / Math.PI;           // -1..1
 
             Genome g = predator.genome;
+            g.current_dist = bestDistPrey;
+            double progress = g.previous_dist - g.current_dist;
+            inputs.add(progress);       
+            g.progress = progress;  
+            g.previous_dist = g.current_dist;                        
+
             g.distanceToEnemy += normDist;
             g.countEnemies += 1;
             g.averageDistanceToNearestEnemy = g.distanceToEnemy / g.countEnemies;
@@ -134,9 +134,12 @@ public class AIController {
             inputs.add(dot); // -1..1
 
             inputs.add(countPreys / Math.pow(2,2*sight + 1));
+
+            double relativeVelocity = (bestDxPrey * fx + bestDyPrey * fy) / (bestDistPrey + 1e-6);
+            inputs.add(relativeVelocity);
         } else {
         // no prey seen: push zeros
-            inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0);
+            inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0);
         }
 
 
@@ -168,14 +171,13 @@ public class AIController {
         inputs.add((double) predator.direction.getXDirection());
         inputs.add((double) predator.direction.getYDirection());
 
-
         // add border proximity 4 values (normalize by world size)
         inputs.add((double) x / World.SIZE);           // north proximity
         inputs.add((double) (World.SIZE-1-x) / World.SIZE); // south
         inputs.add((double) y / World.SIZE);           // west
         inputs.add((double) (World.SIZE-1-y) / World.SIZE); // east
 
-
+        
 
 
         return inputs;

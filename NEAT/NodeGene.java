@@ -8,8 +8,9 @@ public class NodeGene {
     double activation;
     int type_activation;
     boolean exists;
+    double layer;
 
-    public NodeGene(int id, Type type, double bias, double activation, int type_activation){
+    public NodeGene(int id, Type type, double bias, double activation, int type_activation, double layer){
         if (id != -1){
             exists = true;
         } 
@@ -21,6 +22,7 @@ public class NodeGene {
 
         this.id = id;
         this.type = type;
+        this.layer = layer;
 
     }
 }

@@ -20,7 +20,9 @@ import Animals.Predator;
 import Animals.Prey;
 import NEAT.AIController;
 import NEAT.Action;
+import NEAT.Crossover;
 import NEAT.Genome;
+import NEAT.Reproduction;
 import NEAT.Species;
 
 
@@ -110,54 +112,83 @@ public class Simulation extends JPanel implements ActionListener {
             }
         }
         
+        // if (allDeadPredators(predators) ) System.out.println(new_gen.size());
+        if (allDeadPredators(predators)){
+            for (Predator predator : predators){
+                predator.genome.fitness = Genome.evaluateFitnessPredator(predator);
+            }
 
-        if (allDeadPredators(predators) && !regeneration.isEmpty()){
+            List<Predator> forReproduction = new ArrayList<>(predators);
+            all_species = Crossover.match_species(forReproduction, all_species);
+            offsprings_species = Reproduction.reproducePredatorSpecies(all_species, predators.size()); 
+            // System.out.println(offsprings_species.size());
+            Graph.n_species = offsprings_species.size();
+
+            new_gen.clear();
+
+            for (Species s : offsprings_species){
+                new_gen.addAll(s.predators);
+            }
+
+            Crossover.adjustThreshold(offsprings_species);
+
+
+
+            if (reproduction_time != 5 && Graph.max_fitness < 1000) reproduction_time -= 1;
+
+            if ((Graph.max_fitness >= 1000 || step >= 5000) && reproduction_time < 20) reproduction_time += 1;
+
+
             generate_new_predators(newWorld);
         }
+
 
         if (remainingPreys(preys, 15)){           
             generate_new_preys(newWorld, 15);
         }
 
-        if (step % reproduction_time == 0 && !predators.isEmpty()){
-            // I compare fittness of all predators/preys. Perform the generation of offsprings. 
-            // I want this to seem smooth. So I will update genomes for half of the animals and half will remain unchanged. 
-            // But no animal actually disappear from a screen.
+        // if (step % reproduction_time == 0 && !predators.isEmpty()){
+        //     // I compare fittness of all predators/preys. Perform the generation of offsprings. 
+        //     // I want this to seem smooth. So I will update genomes for half of the animals and half will remain unchanged. 
+        //     // But no animal actually disappear from a screen.
             
-            // List<Predator> forReproduction = new ArrayList<>();
-            // forReproduction.addAll(predators);
-            // offsprings_predators = Genome.reproducePredator(forReproduction);  
+        //     // List<Predator> forReproduction = new ArrayList<>();
+        //     // forReproduction.addAll(predators);
+        //     // offsprings_predators = Genome.reproducePredator(forReproduction);  
 
-            // Genome.reproducePrey(preys);
+        //     // Genome.reproducePrey(preys);
+        //     new_gen.clear();
 
 
+        //     List<Predator> forReproduction = new ArrayList<>();
+        //     forReproduction.addAll(predators);
+       
+        //     Genome.match_species(forReproduction, all_species);
+        //     offsprings_species = Genome.reproducePredatorSpecies(all_species, predators.size()); 
+        //     Graph.n_species = offsprings_species.size();
 
-            List<Predator> forReproduction = new ArrayList<>();
-            forReproduction.addAll(predators);
-            // List<Predator> predatorsList = predators.;
-            Genome.match_species(forReproduction, all_species);
-            offsprings_species = Genome.reproducePredatorSpecies(all_species, predators.size()); 
-            Graph.n_species = offsprings_species.size() ;
+        //     for (Species s : offsprings_species){
+        //         for (Predator predator : s.predators) {
+        //             new_gen.add(predator);
+        //             // regeneration.add(predator);
+        //         }
 
-            for (Species s : offsprings_species){
-                for (Predator predator : s.predators) {
-                    new_gen.add(predator);
-                    regeneration.add(predator);
-                }
+        //     }
 
-            }
+        //     Genome.adjustThreshold(offsprings_species);
 
-            Genome.adjustThreshold(offsprings_species);
+        //     predators.clear();                           // clear this after the reproduction step?
+        //     preys.clear();
 
-            predators.clear();                           // clear this after the reproduction step?
-            preys.clear();
+        //     // Are those effects on reproduction time even useful?
+        //     if (reproduction_time != 5 && Graph.max_fitness < 1000) reproduction_time -= 1;
 
-            // Are those effects on reproduction time even useful?
-            if (reproduction_time != 5 && Graph.max_fitness < 1000) reproduction_time -= 1;
+        //     if ((Graph.max_fitness >= 1000 || step >= 5000) && reproduction_time < 20) reproduction_time += 1;
 
-            if ((Graph.max_fitness >= 1000 || step >= 5000) && reproduction_time < 20) reproduction_time += 1;
+        // }
 
-        }
+        predators.clear();                           // clear this after the reproduction step?
+        preys.clear();
 
         this.world = newWorld;
     }
@@ -183,18 +214,16 @@ public class Simulation extends JPanel implements ActionListener {
 
         if (predator.alive){
             predator.staying_alive += 1;
-            predator.genome.fitness = Genome.evaluateFitnessPredator(predator);
 
             // ---------------- Fitness data collection ----------------------
+            double fitness = Genome.evaluateFitnessPredator(predator); 
             if (graph.fitness_record.empty()){
-                graph.registerData(predator.genome.fitness);
+                graph.registerData(fitness);
             }
-            else if (graph.fitness_record.peek() >= predator.genome.fitness){
+            else if (graph.fitness_record.peek() >= fitness){
                 graph.registerData(graph.fitness_record.peek());
-                
-            } else graph.registerData(predator.genome.fitness);
+            } else graph.registerData(fitness);
             // ---------------------------------------------------------------
-
 
             
             AIController controller = new AIController();
@@ -205,23 +234,24 @@ public class Simulation extends JPanel implements ActionListener {
             int new_x;
             int new_y;
 
-            predator.FOOD_BAR--;
+           
     
             // if ((step % birth_time == 0) && !offsprings_predators.isEmpty() && random.nextDouble() > 0.7){ 
             //     predator.genome = offsprings_predators.get(random.nextInt(offsprings_predators.size())).genome;
 
             // }
 
-            if ((step % birth_time == 0) && !new_gen.isEmpty() && random.nextDouble() > 0.7){ 
-                Predator offspring = new_gen.get(random.nextInt(new_gen.size()));
-                predator.genome = offspring.genome;
-                // new_gen.remove(offspring);
-            }
+            // if ((step % birth_time == 0) && !new_gen.isEmpty() && random.nextDouble() > 0.7){ 
+            //     Predator offspring = new_gen.get(random.nextInt(new_gen.size()));
+            //     predator.genome = offspring.genome;
+            //     // new_gen.remove(offspring);
+            // }
                     
 
         
             new_x = x + action.getXDirection();
             new_y = y + action.getYDirection();
+    
 
             if (new_x < 0 || new_x >= World.SIZE || new_y < 0 || new_y >= World.SIZE) {
                 // hit border → don't move
@@ -244,6 +274,8 @@ public class Simulation extends JPanel implements ActionListener {
                     // world.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
                     predator.setFoodBar(Predator.MAX_FOOD_BAR_VALUE);
                     predator.preysEaten++;
+
+  
                 } 
 
                 world.set(new_x, new_y, new Cell(World.MARK_BACKGROUND, "background"));
@@ -322,11 +354,11 @@ public class Simulation extends JPanel implements ActionListener {
                     
                     Cell new_predator = new Predator(World.PREDATOR_COLOR, 1);
 
-                    Predator predator = regeneration.get(random.nextInt(regeneration.size()));
-                    new_predator.genome = predator.genome.cloneDeep();
-                    regeneration.remove(predator);
+                    Predator predator = new_gen.get(random.nextInt(new_gen.size()));
+                    // new_predator.genome = predator.genome.cloneDeep();
+                    // regeneration.remove(predator);
 
-                    newWorld.set(i, j, new_predator);
+                    newWorld.set(i, j, predator);
                     count++;
                 }
             }

@@ -7,6 +7,7 @@ import java.util.Random;
 import NEAT.Action;
 import NEAT.ConnectionGene;
 import NEAT.Genome;
+import NEAT.Mutation;
 import NEAT.NodeGene;
 import NEAT.FeedForwardNeuralNetwork;
 
@@ -15,6 +16,8 @@ public class Predator extends Cell{
     public final static int MAX_FOOD_BAR_VALUE = 1000;
     public final static int MAX_WATER_BAR_VALUE = 100;
     // private static final int LIFETIME = 100;
+
+    public Action last_action;
     
     public int staying_alive = 0;
     public int preysEaten = 0;
@@ -26,19 +29,19 @@ public class Predator extends Cell{
 
         super.genome = new Genome(Genome.next_genome_id(), inputs, outputs);
         for (int id = 0; id < inputs; id++){
-            NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0, 0);
+            NodeGene input_neuron = new NodeGene(id, NodeGene.Type.INPUT, 0, 0, 0, 0);
             super.genome.nodes.add(input_neuron);
         }
         for (int id = inputs; id < inputs + outputs; id++){
-            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 0);
+            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 0, 1000);
             super.genome.nodes.add(output_neuron);                                                       // potentially could add links from the very start
         }
 
         // Make a fully connected graph
         for (int input_id = 0; input_id < inputs; input_id++){
             for (int output_id = inputs; output_id < inputs + outputs; output_id++){
-                int innovationNumber = Genome.getInnovation(input_id, output_id);
-                genome.connections.add(new ConnectionGene(input_id, output_id, Genome.new_value(), true, innovationNumber));
+                int innovationNumber = Mutation.getInnovationConnection(input_id, output_id);
+                genome.connections.add(new ConnectionGene(input_id, output_id, Mutation.new_value(), true, innovationNumber));
             }
         }
 
@@ -71,6 +74,7 @@ public class Predator extends Cell{
             clone.genome.facingEnemyCount = this.genome.facingEnemyCount;
             clone.FOOD_BAR = this.FOOD_BAR;
             clone.direction = this.direction;
+            
         }
 
         return clone;
