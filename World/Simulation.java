@@ -39,7 +39,7 @@ public class Simulation extends JPanel implements ActionListener {
     // public static Set<Double> fitness_record = new HashSet<>();    // create a graph to represent the rise in fitness
     private boolean paused = false;
     public static Graph graph;
-
+    
 
     public Simulation(){
         random = new Random();
@@ -111,6 +111,8 @@ public class Simulation extends JPanel implements ActionListener {
                 }
             }
         }
+
+        
         
         // if (allDeadPredators(predators) ) System.out.println(new_gen.size());
         if (allDeadPredators(predators)){
@@ -123,6 +125,7 @@ public class Simulation extends JPanel implements ActionListener {
             offsprings_species = Reproduction.reproducePredatorSpecies(all_species, predators.size()); 
             // System.out.println(offsprings_species.size());
             Graph.n_species = offsprings_species.size();
+            Graph.count_generations++;
 
             new_gen.clear();
 
@@ -140,12 +143,15 @@ public class Simulation extends JPanel implements ActionListener {
 
 
             generate_new_predators(newWorld);
+
         }
 
 
         if (remainingPreys(preys, 15)){           
             generate_new_preys(newWorld, 15);
         }
+
+        
 
         // if (step % reproduction_time == 0 && !predators.isEmpty()){
         //     // I compare fittness of all predators/preys. Perform the generation of offsprings. 
@@ -352,7 +358,7 @@ public class Simulation extends JPanel implements ActionListener {
             for (int j = 0; j < World.SIZE; j++){
                 if ((animal_grid[i][j].isEmpty() || !animal_grid[i][j].alive) && count <= (World.MAXIMUM_ANIMAL_COUNT / 2) && random.nextDouble() > 0.996){
                     
-                    Cell new_predator = new Predator(World.PREDATOR_COLOR, 1);
+                    // Cell new_predator = new Predator(World.PREDATOR_COLOR, 1);
 
                     Predator predator = new_gen.get(random.nextInt(new_gen.size()));
                     // new_predator.genome = predator.genome.cloneDeep();

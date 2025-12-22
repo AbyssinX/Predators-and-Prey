@@ -1,8 +1,6 @@
 package NEAT;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -12,11 +10,11 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
-import Animals.Cell;
+
 import Animals.Predator;
 import Animals.Prey;
 import NEAT.NodeGene.Type;
-import World.World;
+
 
 
 /*
@@ -42,7 +40,7 @@ public class Genome {
     public final int number_of_inputs;         
     public int number_of_hidden = 0;
     public final int number_of_outputs;
-    public final double temperature;
+    public double temperature;
 
 
     // Statistics
@@ -66,7 +64,8 @@ public class Genome {
         this.genomeId = genomeId;
         this.number_of_inputs = inputs;
         this.number_of_outputs = outputs;
-        this.temperature = random.nextDouble(0.8) + 0.6; 
+        // this.temperature = random.nextDouble(0.8) + 0.6;
+        this.temperature = random.nextDouble(0.3) + 0.3; 
     }
 
 
@@ -75,28 +74,29 @@ public class Genome {
     
 public static double evaluateFitnessPredator(Predator predator) {
     // Strong primary reward: eats
-    double fitness = predator.preysEaten * 100.0;
+    double fitness = predator.preysEaten * 200.0;
 
     if (predator.preysEaten > 0) {
         fitness += predator.staying_alive * 0.5;
-    } else {
-        // Penalize staying alive without eating
-        fitness -= predator.staying_alive * 0.1;
-    }
+    } 
+    // else {
+    //     // Penalize staying alive without eating
+    //     fitness += predator.staying_alive * 0.1;
+    // }
 
 
     // Reward reduction for being far from nearest detected prey (encourage pursuit).
     // ensure averageDistanceToNearestEnemy updated elsewhere (see AIController changes).
-    double avgDist = predator.genome.averageDistanceToNearestEnemy;
+    double avgDist = predator.genome.averageDistanceToNearestEnemy; 
 
     // Reward getting closer to prey (only if they detected prey)
     if (predator.genome.countEnemies > 0) {
         
-        fitness += Math.max(0, 20.0 / (avgDist + 1.0)); // closer = better
+        fitness += 5 * Math.max(0, 20.0 / (avgDist + 1.0)); // closer = better
         
         // Bonus for facing prey
         if (predator.genome.facingEnemyCount > 0) {
-            fitness += predator.genome.facingEnemyCount * 2.0;
+            fitness += predator.genome.facingEnemyCount ;
         }
     }
     
@@ -112,6 +112,9 @@ public static double evaluateFitnessPredator(Predator predator) {
 
 
 
+
+
+
     public static void evaluateFitnessPrey(Prey prey) {         
         // Build neural net from this genome                              
         // Run simulation                                       
@@ -119,6 +122,11 @@ public static double evaluateFitnessPredator(Predator predator) {
 
         // return prey.staying_alive + prey.foodEaten;
     }
+
+
+
+
+
 
 
 
@@ -295,6 +303,8 @@ public static double evaluateFitnessPredator(Predator predator) {
         copyGenome.nodes = newNodes;
         copyGenome.connections = newConns;
         copyGenome.number_of_hidden = this.number_of_hidden;
+
+        copyGenome.temperature = this.temperature;
 
         return copyGenome;
     }

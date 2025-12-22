@@ -10,11 +10,12 @@ import javax.swing.JPanel;
 public class Graph extends JPanel{
 
     // private final static int X1 = 600;
-    private final int width = 300;
+    private final int width = 350;
     private final int height = 20;
     public Stack<Double> fitness_record;
     public static int max_fitness = 0;
     public static int n_species = 0;
+    public static int count_generations = 1;
 
     public Graph(){
         fitness_record = new Stack<>();
@@ -45,7 +46,8 @@ public class Graph extends JPanel{
 
 
         // Graph.max_fitness = fitness_record.peek().intValue();
-        g.drawString("# of species: " + Graph.n_species, 150, 15);
+        g.drawString("# species: " + Graph.n_species, 130, 15);
+        g.drawString("Generation: " + Graph.count_generations, 230, 15);
         
 
         // g.setColor(Color.GREEN);

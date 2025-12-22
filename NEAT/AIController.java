@@ -7,7 +7,6 @@ import java.util.Random;
 
 // import Animals.Cell;
 import Animals.Predator;
-import World.Graph;
 import World.World;
 
 public class AIController {
@@ -28,6 +27,7 @@ public class AIController {
         double sum = 0.0;
 
         double temperature = predator.genome.temperature; 
+        // double temperature = 1;
 
         for (double o : outputs) {
             sum += Math.exp(o / temperature);
@@ -38,9 +38,13 @@ public class AIController {
         double cumulative = 0;
         for (int i = 0; i < outputs.size(); i++) {
             cumulative += Math.exp(outputs.get(i) / temperature) / sum;
-            if (r < cumulative) return Action.values()[i];
+            if (r < cumulative){
+                return Action.values()[i];
+            } 
         }
         return Action.values()[outputs.size()-1];
+
+        // return Action.values()[random.nextInt(4)]; // For testing whether my model performs any better than just random behaviour.
 
 
     }
@@ -112,7 +116,9 @@ public class AIController {
             Genome g = predator.genome;
             g.current_dist = bestDistPrey;
             double progress = g.previous_dist - g.current_dist;
-            inputs.add(progress);       
+
+            // inputs.add(progress);       
+
             g.progress = progress;  
             g.previous_dist = g.current_dist;                        
 
@@ -123,7 +129,7 @@ public class AIController {
             if (angle == 0) g.facingEnemyCount += 1;
 
             inputs.add(1.0 - normDist);    // closer -> larger
-            inputs.add(angle);             // direction
+            // inputs.add(angle);             // direction
 
             // facing: dot product with current facing vector
             Action dir = world.getAnimalGrid()[x][y].direction;
@@ -131,15 +137,18 @@ public class AIController {
             int fx = dir.getXDirection(), fy = dir.getYDirection();
 
             double dot = (bestDxPrey*fx + bestDyPrey*fy) / (Math.max(1.0, bestDistPrey)); // approx cos
-            inputs.add(dot); // -1..1
+            // inputs.add(dot); // -1..1
+            inputs.add(bestDxPrey / maxSight);
+            inputs.add(bestDyPrey / maxSight);
+        
 
             inputs.add(countPreys / Math.pow(2,2*sight + 1));
 
-            double relativeVelocity = (bestDxPrey * fx + bestDyPrey * fy) / (bestDistPrey + 1e-6);
-            inputs.add(relativeVelocity);
+            // double relativeVelocity = (bestDxPrey * fx + bestDyPrey * fy) / (bestDistPrey + 1e-6);
+            // inputs.add(relativeVelocity);
         } else {
         // no prey seen: push zeros
-            inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0);
+            inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); 
         }
 
 
@@ -165,13 +174,14 @@ public class AIController {
             inputs.add(0.0); inputs.add(0.0); inputs.add(0.0); inputs.add(0.0);
         }
 
-        inputs.add((double) predator.getFoodBar() / Predator.MAX_FOOD_BAR_VALUE);
+        inputs.add(1 - (double) predator.getFoodBar() / Predator.MAX_FOOD_BAR_VALUE);
         // inputs.add(predator.age / Predator.MAX_AGE);    
-        inputs.add(Math.random() * 0.05);                        // add a little bit of noise
+        inputs.add(Math.random() * 0.02);                        // add a little bit of noise
         inputs.add((double) predator.direction.getXDirection());
         inputs.add((double) predator.direction.getYDirection());
 
         // add border proximity 4 values (normalize by world size)
+
         inputs.add((double) x / World.SIZE);           // north proximity
         inputs.add((double) (World.SIZE-1-x) / World.SIZE); // south
         inputs.add((double) y / World.SIZE);           // west

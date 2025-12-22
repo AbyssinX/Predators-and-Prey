@@ -34,13 +34,16 @@ class Activation {
     public double elu(double x) { return x >= 0 ? x : Math.exp(x) - 1; }
     public double leakyReLU(double x) { return x >= 0 ? x : 0.01 * x; }
     public double sigmoid(double x) { return 1.0 / (1.0 + Math.exp(-x)); }
+    public double linear(double x) { return x; }  
 
     public double activate(double x, int type) {
         return switch (type) {
             case 0 -> tanh(x);
             case 1 -> leakyReLU(x);
             case 2 -> elu(x);
-            default -> sigmoid(x);
+            case 3 -> sigmoid(x);
+            case 4 -> linear(x);
+            default -> linear(x);
         };
     }
 }
@@ -77,7 +80,7 @@ public class FeedForwardNeuralNetwork {
    
 
         for (Neuron neuron : neurons){
-
+            
             double value = 0;
 
             for (NeuronInput input : neuron.inputs){
@@ -90,7 +93,7 @@ public class FeedForwardNeuralNetwork {
             values.put(neuron.neuron_id, value);
         }
 
-        List<Double> outputs = new ArrayList<>();
+        List<Double> outputs = new ArrayList<>(output_ids.size());
         for (int output_id : output_ids){
             assert(values.containsKey(output_id));
             outputs.add(values.get(output_id));
@@ -108,12 +111,13 @@ public class FeedForwardNeuralNetwork {
         List<List<Integer>> layers = genome.createLayers(inputs, outputs, genome);
 
         List<Neuron> neurons = new ArrayList<>();
-        for (List<Integer> layer : layers){
+        for (int layerIdx = 1; layerIdx < layers.size(); layerIdx++){
+            List<Integer> layer = layers.get(layerIdx);
+
             for (int neuron_id : layer){
                 List<NeuronInput> neuronInputs = new ArrayList<>();
 
                 for (ConnectionGene connection : genome.connections){
-
                     if (neuron_id == connection.outNode && connection.enabled){
                         neuronInputs.add(new NeuronInput(connection.inpNode, connection.weight));
                     }

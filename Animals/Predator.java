@@ -33,8 +33,8 @@ public class Predator extends Cell{
             super.genome.nodes.add(input_neuron);
         }
         for (int id = inputs; id < inputs + outputs; id++){
-            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 0, 1000);
-            super.genome.nodes.add(output_neuron);                                                       // potentially could add links from the very start
+            NodeGene output_neuron = new NodeGene(id, NodeGene.Type.OUTPUT, 0, 0, 4, 1000);
+            super.genome.nodes.add(output_neuron);                                                      
         }
 
         // Make a fully connected graph

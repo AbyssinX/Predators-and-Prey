@@ -110,7 +110,6 @@ public class Mutation {
 
     // -----------------
 
-    static private int n = 0;
     private static void add_neuron(Genome genome){
         if (genome.connections.isEmpty()) return;
 
@@ -126,8 +125,7 @@ public class Mutation {
 
 
         int newNodeId = getInnovationNode(old_connection.innovationNumber);
-        n += 1;
-        
+
         
         if (genome.findNeuron(newNodeId) == null) {
             // System.out.println("here");

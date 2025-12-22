@@ -11,7 +11,7 @@ import NEAT.Action;
 
 public class Cell {
     
-    public static final int inputs = 20;      // change later
+    public static final int inputs = 16;      // change later
     public static final int outputs = 4;     // change later
 
     protected Color color;
