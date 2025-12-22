@@ -1,6 +1,8 @@
 # Predators-and-Prey
 This project explores predetor and prey interection using NEAT algorithm. The aim for this project was to get better at programming in Java and get a hands on experience of building and employing a reinforcement learning algorithm, so any techniques that are outlined here were encoded from scratch, using only the most basic libraries. 
 
+https://github.com/user-attachments/assets/6b461fff-97cc-42d2-9b26-f42e6b17ef97
+
 ### Environment
 In the World forlder you can find everything I used to generate the environment for my actors. 
 The environment I created for my actors is, fundamentally, a grid of cells: it is easier to start with something discrete. Despite that simplification, I wanted the generated world to look natural and have a similar terrain that one might find in grasslands: it has some bushes for prey to find food and, maybe, hide from predators, water reserves, a bit of sand. To achieve this I learnt how to create Perlin noise, a fascinating algorithm that made me revisit my Linear Algebra notes, and then transform it into the discrete intervals corresponding to the types of terrain and their proportions. However, the resultant world had very rigid and clear transitions between different terrains. That is not at all true about the real world. So I applied Gaussian fitler to smooth edges and create a nice transition. All that was left to do is to generate some berries that would serve as a food source for prey in the future. The solution to that is just sampling points from another map of Perlin noise that generates the distribution of berries at each point corresponding to bushes in the original map. 
