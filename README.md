@@ -1,7 +1,7 @@
 # Predators-and-Prey
 This project explores predetor and prey interection using NEAT algorithm. The aim for this project was to get better at programming in Java and get a hands on experience of building and employing a reinforcement learning algorithm, so any techniques that are outlined here were encoded from scratch, using only the most basic libraries. 
 
-https://github.com/user-attachments/assets/6b461fff-97cc-42d2-9b26-f42e6b17ef97
+https://github.com/user-attachments/assets/507fc46c-6b0e-4adf-91b9-449dfb9bcb10
 
 ### Environment
 In the World forlder you can find everything I used to generate the environment for my actors. 
